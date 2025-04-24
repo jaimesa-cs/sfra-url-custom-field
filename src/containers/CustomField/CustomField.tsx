@@ -35,13 +35,17 @@ const CustomFieldExtension = () => {
     const slugUrl = product?.slugUrl || "";
     // from a url like this: https://zybx-002.dx.commercecloud.salesforce.com/s/neemo/25720037M.html
     // get the last part of the url without the .html
+    if (!slugUrl) {
+      return "/slug-url-not-found";
+    }
     const productId = slugUrl.split("/").pop().split(".")[0];
+    if (!productId) {
+      return "/product-id-not-found";
     // using a url prefix in the .env file
     const urlPrefix = process.env.REACT_APP_URL_PREFIX || "";
     //return the partial url starting with the prefix and appending the productId and the .html
     // put it in a variable, log it in the console, and return it
-    const url = `${urlPrefix}/${productId}.html`;
-    console.log("url", url);
+    const url = `${urlPrefix}/${productId}.html`;    
     return `${urlPrefix}/${productId}.html`;
     // console.log("data", data);
     // const taxonomies = data.taxonomies || [];
