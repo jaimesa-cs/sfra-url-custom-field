@@ -13,9 +13,11 @@ export const CustomFieldExtensionProvider = ({ children }: any) => {
       // check if the data was loaded earlier or not
       if (isEmpty(customField)) {
         setLoading(true);
-        let fieldData = await location.field.getData();
-        setCustomField(fieldData);
-        setLoading(false);
+        let fieldData = await location?.field?.getData();
+        if (fieldData) {
+          setCustomField(fieldData);
+          setLoading(false);
+        }
       }
     })();
   }, [setLoading, setCustomField, location, customField]);

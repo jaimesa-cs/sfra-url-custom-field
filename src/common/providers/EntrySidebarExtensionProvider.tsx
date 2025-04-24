@@ -12,7 +12,7 @@ export const EntrySidebarExtensionProvider = ({ children }: any) => {
     (async () => {
       if (!isEmpty(entryData) || isNull(location)) return;
       setLoading(true);
-      const entry: { [key: string]: any } = await location.entry.getData();
+      const entry: { [key: string]: any } = await location?.entry?.getData();
       setEntry(entry);
       setLoading(false);
     })();

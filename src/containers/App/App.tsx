@@ -22,58 +22,87 @@ const DefaultPage = React.lazy(() => import("../index"));
 function App() {
   return (
     <ErrorBoundary>
-      <MarketplaceAppProvider>
-        <Routes>
-          <Route path="/" element={<DefaultPage />} />
-          <Route
-            path="/sfra-url-custom-field"
-            element={
+      <Routes>
+        <Route
+          path="/test"
+          element={
+            <button
+              onClick={() => {
+                fetch(`https://zybx-002.dx.commercecloud.salesforce.com/s/neemo/spring-lookM.html?json=true`, {
+                  headers: {
+                    "Content-Type": "application/json",
+                  },
+                }).then((response) => {
+                  console.log("response", response);
+                  const data = response.json();
+                  console.log("data", data);
+                });
+              }}>
+              Click Me
+            </button>
+          }
+        />
+        <Route path="/" element={<DefaultPage />} />
+        <Route
+          path="/sfra-url-custom-field"
+          element={
+            <MarketplaceAppProvider>
               <Suspense>
                 <CustomFieldExtensionProvider>
                   <CustomFieldExtension />
                 </CustomFieldExtensionProvider>
               </Suspense>
-            }
-          />
-          <Route
-            path="/entry-sidebar"
-            element={
-              <Suspense>
-                <EntrySidebarExtensionProvider>
-                  <EntrySidebarExtension />
-                </EntrySidebarExtensionProvider>
-              </Suspense>
-            }
-          />
-          <Route
-            path="/app-configuration"
-            element={
-              <Suspense>
-                <AppConfigurationExtensionProvider>
-                  <AppConfigurationExtension />
-                </AppConfigurationExtensionProvider>
-              </Suspense>
-            }
-          />
-          <Route
-            path="/asset-sidebar"
-            element={
-              <Suspense>
-                <AssetSidebarExtension />
-              </Suspense>
-            }
-          />
-          <Route
-            path="/stack-dashboard"
-            element={
-              <Suspense>
-                <StackDashboardExtension />
-              </Suspense>
-            }
-          />
-          <Route path="*" element={<PageNotFound />} />
-        </Routes>
-      </MarketplaceAppProvider>
+            </MarketplaceAppProvider>
+          }
+        />
+        <Route
+          path="/sfra-url-custom-field"
+          element={
+            <Suspense>
+              <CustomFieldExtensionProvider>
+                <CustomFieldExtension />
+              </CustomFieldExtensionProvider>
+            </Suspense>
+          }
+        />
+        <Route
+          path="/entry-sidebar"
+          element={
+            <Suspense>
+              <EntrySidebarExtensionProvider>
+                <EntrySidebarExtension />
+              </EntrySidebarExtensionProvider>
+            </Suspense>
+          }
+        />
+        <Route
+          path="/app-configuration"
+          element={
+            <Suspense>
+              <AppConfigurationExtensionProvider>
+                <AppConfigurationExtension />
+              </AppConfigurationExtensionProvider>
+            </Suspense>
+          }
+        />
+        <Route
+          path="/asset-sidebar"
+          element={
+            <Suspense>
+              <AssetSidebarExtension />
+            </Suspense>
+          }
+        />
+        <Route
+          path="/stack-dashboard"
+          element={
+            <Suspense>
+              <StackDashboardExtension />
+            </Suspense>
+          }
+        />
+        <Route path="*" element={<PageNotFound />} />
+      </Routes>
     </ErrorBoundary>
   );
 }
