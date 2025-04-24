@@ -36,8 +36,8 @@ a {
 .layout-container {
   display: flex;
   height: 96vh;
-  justify-content: center;
-  align-items: center;
+  /* justify-content: center;
+  align-items: center; */
   gap: 0.625rem;
   align-self: stretch;
 }
@@ -80,7 +80,7 @@ a {
   font-size: 1.25rem;
   font-style: normal;
   font-weight: 600;
-  line-height: 150%; 
+  line-height: 150%;
   text-transform: capitalize;
 }
 
@@ -103,7 +103,7 @@ a {
   font-family: Inter;
   font-style: normal;
   font-weight: 600;
-  line-height: 150%; 
+  line-height: 150%;
   letter-spacing: 0.00875rem;
   text-transform: capitalize;
 }

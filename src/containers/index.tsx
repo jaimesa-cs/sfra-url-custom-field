@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 
 const DefaultPage = () => {
   return (
@@ -8,6 +8,9 @@ const DefaultPage = () => {
           <p>Nothing to show here. Are you trying to access any of the following paths?</p>
           <ul className="ui-location">
             <li>
+              <a href="/sfra-custom-url-field">Sfra Custom Url Field</a>
+            </li>
+            {/* <li>
               <a href="/stack-dashboard">Stack Dashboard</a>
             </li>
             <li>
@@ -27,7 +30,7 @@ const DefaultPage = () => {
             </li>
             <li>
               <a href="/field-modifier">Field Modifier</a>
-            </li>
+            </li> */}
           </ul>
         </div>
       </div>

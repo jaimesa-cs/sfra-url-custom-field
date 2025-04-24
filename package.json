@@ -23,7 +23,7 @@
     "web-vitals": "^3.5.1"
   },
   "scripts": {
-    "start": "react-scripts start",
+    "start": "PORT=3005 react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test --env=jsdom --verbose",
     "eject": "react-scripts eject",
