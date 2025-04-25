@@ -4,6 +4,7 @@ import { HashRouter } from "react-router-dom";
 import reportWebVitals from "./reportWebVitals";
 import App from "./containers/App/App";
 import "./index.css";
+import "@contentstack/venus-components/build/main.css";
 
 const root = ReactDOM.createRoot(document.getElementById("root") as HTMLElement);
 root.render(

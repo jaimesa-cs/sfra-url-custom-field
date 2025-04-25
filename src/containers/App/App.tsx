@@ -1,3 +1,10 @@
+// Extend the Window interface to include iframeRef
+declare global {
+  interface Window {
+    iframeRef: HTMLElement | null;
+  }
+}
+
 import React, { Suspense } from "react";
 import { ErrorBoundary } from "../../components/ErrorBoundary";
 import { MarketplaceAppProvider } from "../../common/providers/MarketplaceAppProvider";
@@ -6,6 +13,7 @@ import { EntrySidebarExtensionProvider } from "../../common/providers/EntrySideb
 import { AppConfigurationExtensionProvider } from "../../common/providers/AppConfigurationExtensionProvider";
 import { CustomFieldExtensionProvider } from "../../common/providers/CustomFieldExtensionProvider";
 import FieldModifierExtension from "../FieldModifier/FieldModifier";
+import { useAppSdk } from "../../common/hooks/useAppSdk";
 
 /**
  * All the routes are Lazy loaded.
@@ -24,12 +32,22 @@ const PageNotFound = React.lazy(() => import("../404/404"));
 // const ContentTypeSidebarExtension = React.lazy(() => import("../ContentTypeSidebar/ContentTypeSidebar"));
 
 function App() {
+  const appSdk = useAppSdk();
+  console.log("appSdk", appSdk);
+
   return (
     <ErrorBoundary>
       <MarketplaceAppProvider>
         <Routes>
           <Route path="/" element={<Navigate to="/sfra-url-custom-field" />} />
-          <Route path="/sfra-url-custom-field" element={<SfraCustomUrlFieldExtension />} />
+          <Route
+            path="/sfra-url-custom-field"
+            element={
+              <Suspense>
+                <SfraCustomUrlFieldExtension />
+              </Suspense>
+            }
+          />
           <Route path="*" element={<PageNotFound />} />
         </Routes>
       </MarketplaceAppProvider>
