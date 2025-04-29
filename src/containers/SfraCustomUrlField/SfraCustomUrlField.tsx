@@ -13,6 +13,7 @@ import ModalComponent from "./ModalDialog";
 // import { ModalHeader, ReturnCbModalProps } from "@contentstack/venus-components/build/components/Modal/Modal";
 import { pid } from "process";
 import { set } from "lodash";
+const DEFAULT_URL = "/s/neemo/product-id.html";
 
 const SfraCustomUrlFieldExtension = () => {
   const appConfig = useAppConfig();
@@ -40,7 +41,7 @@ const SfraCustomUrlFieldExtension = () => {
   React.useEffect(() => {
     if (appSdk) {
       const iframeWrapperRef = document.getElementById("sfra-url-root");
-      console.log("iframeWrapperRef", iframeWrapperRef);
+
       window.iframeRef = iframeWrapperRef;
       window.postRobot = appSdk.postRobot;
 
@@ -48,26 +49,40 @@ const SfraCustomUrlFieldExtension = () => {
       if (!customField) return;
       // customField?.frame.updateHeight(0);
 
-      appSdk?.location?.CustomField?.entry.onChange(async () => {
-        const productData = customField?.entry.getData().product;
+      customField.entry.onChange(async (newData) => {
+        console.log("Entry Changed :: ", newData);
+        if (!newData) return;
+
+        const productData = newData.product;
+
         if (productData && productData.data && productData.data.length > 0) {
           const productD = productData.data[0];
-          console.log("productD", productD);
+
           setPid(productD.id);
           const productUrl = productD?.slugUrl;
+
           if (productUrl) {
             // e.g. https://www.example.com/products/product-name
             //get the relative url without the domain
             const relativeUrl = productUrl.split("/").slice(3).join("/");
+            console.log("Relative URL: ", relativeUrl);
             setRelativeUrl(() => {
+              //const newSlug = `/${relativeUrl}`;
               const newSlug = `/${relativeUrl}`;
               setFullSalesforceUrl(() => {
-                customField?.entry.getField("url")?.setData(newSlug);
-                customField?.field.setData(newSlug);
+                console.log("Entry :: url:", newSlug);
+                customField?.entry?.getField("url").setData(newSlug);
+                console.log("Entry ::", customField.entry);
+                console.log("New Slug: ", newSlug);
+                customField.field.setData(newSlug);
                 return productUrl;
               });
               return newSlug;
             });
+          }
+        } else {
+          if (Object.keys(customField.entry._data).length > 0) {
+            customField.entry?.getField("url").setData(DEFAULT_URL);
           }
         }
       });

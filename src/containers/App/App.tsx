@@ -33,7 +33,6 @@ const PageNotFound = React.lazy(() => import("../404/404"));
 
 function App() {
   const appSdk = useAppSdk();
-  console.log("appSdk", appSdk);
 
   return (
     <ErrorBoundary>
