@@ -4,10 +4,11 @@ import { JsonView } from "react-json-view-lite";
 import "react-json-view-lite/dist/index.css";
 import "./ModalDialog.css";
 import { pid } from "process";
+import { ModalProps } from "@contentstack/venus-components/build/components/Modal/Modal";
 
-interface ModalComponentProps {
-  closeModal: () => void;
+interface ModalComponentProps extends ModalProps {
   pid: string;
+  closeModal: () => void;
 }
 const ModalComponent = (props: ModalComponentProps) => {
   const pid = props.pid;
@@ -26,16 +27,18 @@ const ModalComponent = (props: ModalComponentProps) => {
   }, []);
   return (
     <>
-      <ModalHeader title="Product JSON" closeModal={props.closeModal} closeIconTestId="cs-default-header-close" />
+      <ModalHeader title="Product JSON" closeIconTestId="cs-default-header-close" closeModal={props.closeModal} />
 
       <ModalBody className="modalBodyCustomClass">{data ? <JsonView data={data || {}} /> : <>Loading...</>}</ModalBody>
 
       <ModalFooter>
         <ButtonGroup>
-          <Button buttonType="light" onClick={() => props.closeModal()}>
-            Cancel
+          <Button
+            onClick={() => {
+              props.closeModal();
+            }}>
+            Close
           </Button>
-          <Button>Send</Button>
         </ButtonGroup>
       </ModalFooter>
     </>

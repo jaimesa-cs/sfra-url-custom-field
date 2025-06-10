@@ -109,7 +109,15 @@ const SfraCustomUrlFieldExtension = () => {
                 shadow="medium"
                 onClick={() => {
                   cbModal({
-                    component: (props: ModalProps) => <ModalComponent closeModal={onClose} pid={pid} />,
+                    component: (props: ModalProps) => (
+                      <ModalComponent
+                        pid={pid}
+                        closeModal={() => {
+                          setRawConfigModalOpen(false);
+                        }}
+                        {...props}
+                      />
+                    ),
                     modalProps: {
                       onClose,
                       onOpen: () => {
