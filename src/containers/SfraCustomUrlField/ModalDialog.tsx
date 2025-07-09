@@ -16,7 +16,7 @@ const ModalComponent = (props: ModalComponentProps) => {
   React.useEffect(() => {
     const fetchProductData = async () => {
       const response = await fetch(
-        "https://zybx-002.dx.commercecloud.salesforce.com/on/demandware.store/Sites-neemo-Site/default/Product-JSON?pid=" +
+        "https://zybx-001.dx.commercecloud.salesforce.com/on/demandware.store/Sites-SFRADemo-Site/default/Product-JSON?pid=" +
           pid
       );
 
