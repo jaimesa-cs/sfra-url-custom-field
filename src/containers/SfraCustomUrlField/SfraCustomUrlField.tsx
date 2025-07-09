@@ -11,9 +11,10 @@ import { ModalProps } from "@contentstack/venus-components/build/components/Moda
 import ModalComponent from "./ModalDialog";
 
 // import { ModalHeader, ReturnCbModalProps } from "@contentstack/venus-components/build/components/Modal/Modal";
-import { pid } from "process";
-import { set } from "lodash";
-const DEFAULT_URL = "/s/neemo/product-id.html";
+
+const DEFAULT_URL = "roduct-id.html";
+const PREFIX = `/s/SFRADemo`;
+
 
 const SfraCustomUrlFieldExtension = () => {
   const appConfig = useAppConfig();
@@ -64,7 +65,7 @@ const SfraCustomUrlFieldExtension = () => {
           if (productUrl) {
             // e.g. https://www.example.com/products/product-name
             //get the relative url without the domain
-            const relativeUrl = productUrl.split("/").slice(3).join("/");
+            const relativeUrl = productUrl.split("/").slice(5).join("/");
             console.log("Relative URL: ", relativeUrl);
             setRelativeUrl(() => {
               //const newSlug = `/${relativeUrl}`;
