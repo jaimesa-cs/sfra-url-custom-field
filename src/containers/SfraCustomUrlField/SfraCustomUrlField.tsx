@@ -12,8 +12,8 @@ import ModalComponent from "./ModalDialog";
 
 // import { ModalHeader, ReturnCbModalProps } from "@contentstack/venus-components/build/components/Modal/Modal";
 
-const DEFAULT_URL = "roduct-id.html";
-const PREFIX = `/s/SFRADemo`;
+const DEFAULT_URL = process.env.NEXT_PUBLIC_DEFAULT_URL || '';
+const PREFIX = process.env.NEXT_PUBLIC_PREFIX || `/s/SFRADemo`;
 
 
 const SfraCustomUrlFieldExtension = () => {
