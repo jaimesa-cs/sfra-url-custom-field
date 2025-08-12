@@ -1,4 +1,7 @@
 {
+  "engines": {
+    "node": "22.x"
+  },
   "name": "marketplace-app-boilerplate",
   "version": "1.2.6",
   "private": true,
