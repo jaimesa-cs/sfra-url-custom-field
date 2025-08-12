@@ -9,10 +9,7 @@ import React, { Suspense } from "react";
 import { ErrorBoundary } from "../../components/ErrorBoundary";
 import { MarketplaceAppProvider } from "../../common/providers/MarketplaceAppProvider";
 import { Navigate, Route, Routes } from "react-router-dom";
-import { EntrySidebarExtensionProvider } from "../../common/providers/EntrySidebarExtensionProvider";
 import { AppConfigurationExtensionProvider } from "../../common/providers/AppConfigurationExtensionProvider";
-import { CustomFieldExtensionProvider } from "../../common/providers/CustomFieldExtensionProvider";
-import FieldModifierExtension from "../FieldModifier/FieldModifier";
 import { useAppSdk } from "../../common/hooks/useAppSdk";
 
 /**
@@ -23,7 +20,7 @@ import { useAppSdk } from "../../common/hooks/useAppSdk";
 // const CustomFieldExtension = React.lazy(() => import("../CustomField/CustomField"));
 const SfraCustomUrlFieldExtension = React.lazy(() => import("../SfraCustomUrlField/SfraCustomUrlField"));
 // const EntrySidebarExtension = React.lazy(() => import("../SidebarWidget/EntrySidebar"));
-// const AppConfigurationExtension = React.lazy(() => import("../AppConfiguration/AppConfiguration"));
+const AppConfigurationExtension = React.lazy(() => import("../AppConfiguration/AppConfiguration"));
 // const AssetSidebarExtension = React.lazy(() => import("../AssetSidebarWidget/AssetSidebar"));
 // const StackDashboardExtension = React.lazy(() => import("../DashboardWidget/StackDashboard"));
 // const FullPageExtension = React.lazy(() => import("../FullPage/FullPage"));
@@ -37,18 +34,28 @@ function App() {
   return (
     <ErrorBoundary>
       <MarketplaceAppProvider>
-        <Routes>
-          <Route path="/" element={<Navigate to="/sfra-url-custom-field" />} />
-          <Route
-            path="/sfra-url-custom-field"
-            element={
-              <Suspense>
-                <SfraCustomUrlFieldExtension />
-              </Suspense>
-            }
-          />
-          <Route path="*" element={<PageNotFound />} />
-        </Routes>
+        <AppConfigurationExtensionProvider>
+          <Routes>
+            <Route path="/" element={<Navigate to="/sfra-url-custom-field" />} />
+            <Route
+              path="/sfra-url-custom-field"
+              element={
+                <Suspense>
+                  <SfraCustomUrlFieldExtension />
+                </Suspense>
+              }
+            />
+            <Route
+              path="/app-configuration"
+              element={
+                <Suspense>
+                  <AppConfigurationExtension />
+                </Suspense>
+              }
+            />
+            <Route path="*" element={<PageNotFound />} />
+          </Routes>
+        </AppConfigurationExtensionProvider>
       </MarketplaceAppProvider>
     </ErrorBoundary>
   );

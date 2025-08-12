@@ -8,9 +8,10 @@ const DefaultPage = () => {
           <p>Nothing to show here. Are you trying to access any of the following paths?</p>
           <ul className="ui-location">
             <li>
-              <a href="/sfra-custom-url-field">Sfra Custom Url Field</a>
+              <a href="/#/sfra-custom-url-field">Sfra Custom Url Field</a>
             </li>
-            {/* <li>
+            {
+              /* <li>
               <a href="/stack-dashboard">Stack Dashboard</a>
             </li>
             <li>
@@ -18,10 +19,11 @@ const DefaultPage = () => {
             </li>
             <li>
               <a href="/entry-sidebar">Entry Sidebar</a>
-            </li>
-            <li>
-              <a href="/app-configuration">App Configuration</a>
-            </li>
+            </li>*/
+              <li>
+                <a href="/#/app-configuration">App Configuration</a>
+              </li>
+              /*
             <li>
               <a href="/asset-sidebar">Asset Sidebar</a>
             </li>
@@ -30,7 +32,8 @@ const DefaultPage = () => {
             </li>
             <li>
               <a href="/field-modifier">Field Modifier</a>
-            </li> */}
+            </li> */
+            }
           </ul>
         </div>
       </div>

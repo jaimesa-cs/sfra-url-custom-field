@@ -9,12 +9,11 @@ import ConfigModal from "../../components/ConfigModal/ConfigModal";
 import { cbModal, Icon } from "@contentstack/venus-components";
 import { ModalProps } from "@contentstack/venus-components/build/components/Modal/Modal";
 import ModalComponent from "./ModalDialog";
+import { useInstallationData } from "../../common/hooks/useInstallationData";
 
 // import { ModalHeader, ReturnCbModalProps } from "@contentstack/venus-components/build/components/Modal/Modal";
 
-const DEFAULT_URL = process.env.NEXT_PUBLIC_DEFAULT_URL || '';
-const PREFIX = process.env.NEXT_PUBLIC_PREFIX || `/s/SFRADemo`;
-
+const DEFAULT_URL = process.env.NEXT_PUBLIC_DEFAULT_URL || "";
 
 const SfraCustomUrlFieldExtension = () => {
   const appConfig = useAppConfig();
@@ -25,24 +24,16 @@ const SfraCustomUrlFieldExtension = () => {
   const [isRawConfigModalOpen, setRawConfigModalOpen] = useState<boolean>(false);
   const [pid, setPid] = useState<string>();
 
-  const handleViewRawConfig = useCallback(() => {
-    setRawConfigModalOpen(true);
-  }, []);
-
   const handleCloseModal = useCallback(() => {
     setRawConfigModalOpen(false);
   }, []);
 
-  const sampleAppConfig = appConfig?.["sample_app_configuration"] || "";
-  const trimmedSampleAppConfig =
-    sampleAppConfig.length > 17 ? `${sampleAppConfig.substring(0, 17)}...` : sampleAppConfig;
-
   const ref = React.useRef<HTMLDivElement>(null);
 
   React.useEffect(() => {
-    if (appSdk) {
+    console.log("SfraCustomUrlFieldExtension mounted", appConfig);
+    if (appSdk && appConfig && appConfig.sfra_app_configuration) {
       const iframeWrapperRef = document.getElementById("sfra-url-root");
-
       window.iframeRef = iframeWrapperRef;
       window.postRobot = appSdk.postRobot;
 
@@ -51,7 +42,6 @@ const SfraCustomUrlFieldExtension = () => {
       // customField?.frame.updateHeight(0);
 
       customField.entry.onChange(async (newData) => {
-        console.log("Entry Changed :: ", newData);
         if (!newData) return;
 
         const productData = newData.product;
@@ -63,18 +53,12 @@ const SfraCustomUrlFieldExtension = () => {
           const productUrl = productD?.slugUrl;
 
           if (productUrl) {
-            // e.g. https://www.example.com/products/product-name
-            //get the relative url without the domain
             const relativeUrl = productUrl.split("/").slice(5).join("/");
-            console.log("Relative URL: ", relativeUrl);
             setRelativeUrl(() => {
               //const newSlug = `/${relativeUrl}`;
               const newSlug = `/${relativeUrl}`;
               setFullSalesforceUrl(() => {
-                console.log("Entry :: url:", newSlug);
                 customField?.entry?.getField("url").setData(newSlug);
-                console.log("Entry ::", customField.entry);
-                console.log("New Slug: ", newSlug);
                 customField.field.setData(newSlug);
                 return productUrl;
               });
@@ -88,11 +72,13 @@ const SfraCustomUrlFieldExtension = () => {
         }
       });
     }
-  }, [appSdk]);
+  }, [appSdk, appConfig]);
   const onClose = () => {
     console.log("on modal close");
   };
-  return (
+  return !appConfig ? (
+    <>Loading...</>
+  ) : (
     <div className="layout-container" id="sfra-url-root" ref={ref}>
       <div className="ui-location-wrapper">
         <div className="ui-location">
@@ -113,6 +99,7 @@ const SfraCustomUrlFieldExtension = () => {
                     component: (props: ModalProps) => (
                       <ModalComponent
                         pid={pid}
+                        jsonEndpoint={appConfig.sfra_app_configuration?.jsonEndpoint || ""}
                         closeModal={() => {
                           setRawConfigModalOpen(false);
                         }}
@@ -130,24 +117,6 @@ const SfraCustomUrlFieldExtension = () => {
                 }}
               />
             )}
-            {/* <Icon
-              icon="Expand"
-              hover={true}
-              hoverType="secondary"
-              shadow="medium"
-              onClick={() => {
-                cbModal({
-                  component: (props: ModalProps) => <ModalComponent closeModal={onClose} />,
-                  modalProps: {
-                    onClose,
-                    onOpen: () => {
-                      console.log("onOpen gets called");
-                    },
-                  },
-                  testId: "cs-modal-storybook",
-                });
-              }}
-            /> */}
 
             {isRawConfigModalOpen && appConfig && <ConfigModal config={appConfig} onClose={handleCloseModal} />}
           </div>

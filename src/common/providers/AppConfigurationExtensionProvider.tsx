@@ -1,10 +1,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 
 import { useAppLocation } from "../hooks/useAppLocation";
-import {
-  AppConfigurationExtensionContext,
-  InstallationData,
-} from "../contexts/appConfigurationExtensionContext";
+import { AppConfigurationExtensionContext, InstallationData } from "../contexts/appConfigurationExtensionContext";
 import { ChildProp } from "../types/types";
 
 export const AppConfigurationExtensionProvider = ({ children }: ChildProp) => {
@@ -29,10 +26,7 @@ export const AppConfigurationExtensionProvider = ({ children }: ChildProp) => {
   }, [installationData, location, setLoading, setInstallation]);
 
   const setInstallationData = useCallback(
-    async (data: {
-      configuration: { [key: string]: unknown };
-      serverConfiguration: { [key: string]: unknown };
-    }) => {
+    async (data: { configuration: { [key: string]: unknown }; serverConfiguration: { [key: string]: unknown } }) => {
       const newInstallationData: InstallationData = {
         configuration: { ...installationData.configuration, ...data.configuration },
         serverConfiguration: { ...installationData.serverConfiguration, ...data.serverConfiguration },
@@ -46,8 +40,7 @@ export const AppConfigurationExtensionProvider = ({ children }: ChildProp) => {
   );
 
   return (
-    <AppConfigurationExtensionContext.Provider
-      value={{ installationData, setInstallationData, loading }}>
+    <AppConfigurationExtensionContext.Provider value={{ installationData, setInstallationData, loading }}>
       {children}
     </AppConfigurationExtensionContext.Provider>
   );

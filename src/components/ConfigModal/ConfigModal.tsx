@@ -1,9 +1,10 @@
 import React, { FC } from "react";
 import "./ConfigModal.css";
 import Close from "../../assets/close-button.svg";
+import { IAppConfiguration } from "../../common/types/types";
 
 interface RawConfigModalProps {
-  config: Record<string, unknown>;
+  config: IAppConfiguration;
   onClose: () => void;
 }
 

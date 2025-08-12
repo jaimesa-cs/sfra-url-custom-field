@@ -5,26 +5,25 @@ import "react-json-view-lite/dist/index.css";
 import "./ModalDialog.css";
 import { pid } from "process";
 import { ModalProps } from "@contentstack/venus-components/build/components/Modal/Modal";
+import { useInstallationData } from "../../common/hooks/useInstallationData";
 
 interface ModalComponentProps extends ModalProps {
   pid: string;
+  jsonEndpoint: string;
   closeModal: () => void;
 }
 const ModalComponent = (props: ModalComponentProps) => {
-  const pid = props.pid;
   const [data, setData] = React.useState();
   React.useEffect(() => {
-    const fetchProductData = async () => {
-      const response = await fetch(
-        "https://zybx-001.dx.commercecloud.salesforce.com/on/demandware.store/Sites-SFRADemo-Site/default/Product-JSON?pid=" +
-          pid
-      );
+    if (!props.pid || !props.jsonEndpoint) return;
 
+    const fetchProductData = async () => {
+      const response = await fetch(props.jsonEndpoint + props.pid);
       const data = await response.json();
       setData(data);
     };
     fetchProductData();
-  }, []);
+  }, [props.jsonEndpoint, props.pid]);
   return (
     <>
       <ModalHeader title="Product JSON" closeIconTestId="cs-default-header-close" closeModal={props.closeModal} />
@@ -36,7 +35,8 @@ const ModalComponent = (props: ModalComponentProps) => {
           <Button
             onClick={() => {
               props.closeModal();
-            }}>
+            }}
+          >
             Close
           </Button>
         </ButtonGroup>

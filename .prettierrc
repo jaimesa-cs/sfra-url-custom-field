@@ -1,4 +1,1 @@
-{
-    "bracketSameLine": true,
-    "singleQuote": false
-}
+{ "prettier": { "singleQuote": true } }
