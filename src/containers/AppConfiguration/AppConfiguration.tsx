@@ -8,7 +8,6 @@ import Tooltip from "../Tooltip/Tooltip";
 
 const AppConfigurationExtension: React.FC = () => {
   const { installationData, setInstallationData } = useInstallationData();
-  console.log("Installation Data: ", installationData);
   const prefixConfigDataRef = useRef<HTMLInputElement>(null);
   const jsonEndpointConfigDataRef = useRef<HTMLInputElement>(null);
   const serverConfigDataRef = useRef<HTMLInputElement>(null);
