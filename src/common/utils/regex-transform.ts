@@ -31,7 +31,12 @@ export type TransformOptions = {
 };
 
 export function transformString(input: string, rules: TransformRule[], options: TransformOptions = {}): string {
-  const { returnOriginalOnNoMatch = true, onMatch } = options;
+  const {
+    returnOriginalOnNoMatch = true,
+    onMatch = (r, b, a) => {
+      console.log(`Transforming "${b}" to "${a}" using rule:`, r);
+    },
+  } = options;
 
   let output = input;
   let matchedAtLeastOne = false;
