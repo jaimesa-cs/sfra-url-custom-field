@@ -1,30 +1,113 @@
-import React, { useRef } from "react";
+import React, { useRef, useState } from "react";
 import Icon from "../../assets/GearSix.svg";
 import localeTexts from "../../common/locales/en-us/index";
-import parse from "html-react-parser";
 import styles from "./AppConfiguration.module.css";
 import { useInstallationData } from "../../common/hooks/useInstallationData";
 import Tooltip from "../Tooltip/Tooltip";
 
+import { EditorState, StateEffect, StateField } from "@codemirror/state";
+import { EditorView, basicSetup } from "codemirror";
+import { json } from "@codemirror/lang-json";
+import { set } from "lodash";
+
+const sampleConfig = [
+  {
+    description: "Product to /p/:id",
+    pattern: "^https?://[^/]+/product/(\\d+)(?:\\?.*)?$",
+    replacement: "/p/$1",
+  },
+  {
+    description: "Drop all utm params",
+    pattern: "(\\?|&)(utm_[^=]+=[^&#]*)",
+    flags: "gi",
+    replacement: "",
+    stopOnMatch: false,
+  },
+];
+
+export const setStatus = StateEffect.define<{ text: string; level?: "info" | "warn" | "error" | "success" } | null>();
+type StatusData = { text: string; level: "info" | "warn" | "error" | "success" } | null;
+
 const AppConfigurationExtension: React.FC = () => {
   const { installationData, setInstallationData } = useInstallationData();
-  const prefixConfigDataRef = useRef<HTMLInputElement>(null);
-  const jsonEndpointConfigDataRef = useRef<HTMLInputElement>(null);
-  const serverConfigDataRef = useRef<HTMLInputElement>(null);
+  const editorRef = useRef<HTMLDivElement>(null);
+  const statusRef = useRef<HTMLDivElement>(null);
+  const viewRef = useRef<EditorView | null>(null);
+  const [code, setCode] = useState<string>(JSON.stringify(sampleConfig, null, 2));
 
-  const updateConfig = async () => {
-    if (typeof setInstallationData !== "undefined") {
-      setInstallationData({
-        configuration: {
-          sfra_app_configuration: {
-            prefix: prefixConfigDataRef.current?.value,
-            jsonEndpoint: jsonEndpointConfigDataRef.current?.value,
+  const updateConfig = React.useCallback(
+    async (value: any) => {
+      if (typeof setInstallationData !== "undefined") {
+        console.log("Updating configuration with value:", value);
+        setInstallationData({
+          configuration: {
+            sfra_app_configuration: {
+              rules: value,
+            },
           },
-        },
-        serverConfiguration: { sfra_server_configuration: serverConfigDataRef.current?.value },
-      });
+          serverConfiguration: {},
+        });
+      }
+    },
+    [setInstallationData]
+  );
+
+  const isValidJson = (value: any) => {
+    try {
+      if (typeof value !== "string") return false;
+      JSON.parse(value);
+
+      return true;
+    } catch {
+      return false;
     }
   };
+
+  React.useEffect(() => {
+    if (!editorRef.current || viewRef.current) return;
+
+    // simple debounce util
+    let validateTid: any = null;
+    const validateAndMaybeUpdate = (value: string) => {
+      if (validateTid) clearTimeout(validateTid);
+      validateTid = setTimeout(() => {
+        const valid = isValidJson(value);
+        if (statusRef.current) {
+          statusRef.current.textContent = valid ? "✓ JSON is valid" : "✗ JSON is invalid";
+        }
+        if (valid) {
+          // call your side-effect when valid
+          updateConfig(value);
+        }
+      }, 200);
+    };
+
+    const onChangeExtension = EditorView.updateListener.of((update) => {
+      if (!update.docChanged) return;
+
+      const value = update.state.doc.toString();
+
+      // 1) ALWAYS capture raw text so you never miss keystrokes
+      setCode(value);
+
+      // 2) Validate and (if valid) push to your store, debounced
+      validateAndMaybeUpdate(value);
+    });
+
+    viewRef.current = new EditorView({
+      state: EditorState.create({
+        doc: installationData?.configuration?.sfra_app_configuration?.rules ?? JSON.stringify(sampleConfig, null, 2),
+        extensions: [basicSetup, json(), onChangeExtension],
+      }),
+      parent: editorRef.current,
+    });
+
+    return () => {
+      if (validateTid) clearTimeout(validateTid);
+      viewRef.current?.destroy();
+      viewRef.current = null;
+    };
+  }, [installationData, updateConfig]);
 
   return (
     <div className={`${styles.layoutContainer}`}>
@@ -39,21 +122,20 @@ const AppConfigurationExtension: React.FC = () => {
             <div className={`${styles.infoContainerWrapper}`}>
               <div className={`${styles.infoContainer}`}>
                 <div className={`${styles.labelWrapper}`}>
-                  <label htmlFor="appConfigData">Storefront Prefix</label>
-                  <Tooltip content="Enter the prefix for your storefront URL, e.g.:'/s/SFRADemo'" />
+                  <label htmlFor="appConfigData">Transform Rules</label>
+                  <Tooltip content="Provide the correct transform rules for your URLs" />
                 </div>
               </div>
               <div className={`${styles.inputContainer}`}>
-                <input
-                  type="text"
-                  ref={prefixConfigDataRef}
-                  required
-                  value={installationData.configuration.sfra_app_configuration?.prefix || ""}
-                  placeholder="Enter Field Value"
-                  name="appConfigData"
-                  autoComplete="off"
-                  className={`${styles.fieldInput}`}
-                  onChange={updateConfig}
+                <div ref={editorRef} style={{ border: "1px solid #ccc" }} />
+                <div
+                  ref={statusRef}
+                  style={{
+                    padding: "4px 8px",
+                    fontSize: "12px",
+                    borderTop: "1px solid #ccc",
+                    background: "#f9f9f9",
+                  }}
                 />
               </div>
             </div>
@@ -61,69 +143,14 @@ const AppConfigurationExtension: React.FC = () => {
               <p>Use this field to share non-sensitive configurations of your app with other locations.</p>
             </div>
           </div>
-          <div className={`${styles.configContainer}`}>
-            <div className={`${styles.infoContainerWrapper}`}>
-              <div className={`${styles.infoContainer}`}>
-                <div className={`${styles.labelWrapper}`}>
-                  <label htmlFor="jsonEndpointConfigData">Storefront Prefix</label>
-                  <Tooltip content="Enter the full URL for your JSON endpoint for product data, e.g.:'https://zybx-001.dx.commercecloud.salesforce.com/on/demandware.store/Sites-SFRADemo-Site/default/Product-JSON?pid='" />
-                </div>
-              </div>
-              <div className={`${styles.inputContainer}`}>
-                <input
-                  type="text"
-                  ref={jsonEndpointConfigDataRef}
-                  required
-                  value={installationData.configuration.sfra_app_configuration?.jsonEndpoint || ""}
-                  placeholder="Enter Field Value"
-                  name="jsonEndpointConfigData"
-                  autoComplete="off"
-                  className={`${styles.fieldInput}`}
-                  onChange={updateConfig}
-                />
-              </div>
-            </div>
-            <div className={`${styles.descriptionContainer}`}>
-              <p>Use this field to share non-sensitive configurations of your app with other locations.</p>
-            </div>
-          </div>
-
-          {/* <div className={`${styles.configContainer}`}>
-            <div className={`${styles.infoContainerWrapper}`}>
-              <div className={`${styles.infoContainer}`}>
-                <div className={`${styles.labelWrapper}`}>
-                  <label htmlFor="serverConfigData">Sample Server Configuration Field </label>
-                  <Tooltip content="You can use this field for information such as Passwords, API Key, Client Secret, Client ID, etc." />
-                </div>
-              </div>
-              <div className={`${styles.inputContainer}`}>
-                <input
-                  type="text"
-                  ref={serverConfigDataRef}
-                  required
-                  value={installationData.serverConfiguration.sample_app_configuration as string}
-                  placeholder="Enter Field Value"
-                  name="serverConfigData"
-                  autoComplete="off"
-                  onChange={updateConfig}
-                />
-              </div>
-            </div>
-            <div className={`${styles.descriptionContainer}`}>
-              <p>
-                Use this field to store sensitive configurations of your app. It is directly shared with the backend via
-                webhooks.
-              </p>
-            </div>
-          </div> */}
         </div>
-
+        {/* 
         <div className={`${styles.locationDescription}`}>
           <p className={`${styles.locationDescriptionText}`}>{parse(localeTexts.ConfigScreen.body)}</p>
           <a target="_blank" rel="noreferrer" href={localeTexts.ConfigScreen.button.url}>
             <span className={`${styles.locationDescriptionLink}`}>{localeTexts.ConfigScreen.button.text}</span>
           </a>
-        </div>
+        </div> */}
       </div>
     </div>
   );

@@ -9,7 +9,7 @@ import ConfigModal from "../../components/ConfigModal/ConfigModal";
 import { cbModal, Icon } from "@contentstack/venus-components";
 import { ModalProps } from "@contentstack/venus-components/build/components/Modal/Modal";
 import ModalComponent from "./ModalDialog";
-import { useInstallationData } from "../../common/hooks/useInstallationData";
+import { transformString } from "../../common/utils/regex-transform";
 
 // import { ModalHeader, ReturnCbModalProps } from "@contentstack/venus-components/build/components/Modal/Modal";
 
@@ -20,7 +20,7 @@ const SfraCustomUrlFieldExtension = () => {
   const appSdk = useAppSdk();
 
   const [, setRelativeUrl] = useState<string>("");
-  const [fullSaleseforceUrl, setFullSalesforceUrl] = useState<string>("");
+  const [fullSalesforceUrl, setFullSalesforceUrl] = useState<string>("");
   const [isRawConfigModalOpen, setRawConfigModalOpen] = useState<boolean>(false);
   const [pid, setPid] = useState<string>();
 
@@ -53,10 +53,15 @@ const SfraCustomUrlFieldExtension = () => {
           const productUrl = productD?.slugUrl;
 
           if (productUrl) {
-            const relativeUrl = productUrl.split("/").slice(5).join("/");
+            let newSlug = productUrl;
+            // console.log("Product URL before transformation:", newSlug);
+            if (appConfig?.sfra_app_configuration?.rules) {
+              newSlug = transformString(productUrl, JSON.parse(appConfig?.sfra_app_configuration?.rules) || []);
+              // console.log("Product URL after transformation:", newSlug);
+            }
+
             setRelativeUrl(() => {
               //const newSlug = `/${relativeUrl}`;
-              const newSlug = `/${relativeUrl}`;
               setFullSalesforceUrl(() => {
                 customField?.entry?.getField("url").setData(newSlug);
                 customField.field.setData(newSlug);
@@ -84,10 +89,10 @@ const SfraCustomUrlFieldExtension = () => {
         <div className="ui-location">
           <div className="input-wrapper">
             <div className="input-container">
-              <p className="config-value">{fullSaleseforceUrl}</p>
+              <p className="config-value">{fullSalesforceUrl}</p>
               <img src={ReadOnly} alt="ReadOnlyLogo" />
             </div>
-            {pid && (
+            {/* {pid && (
               <Icon
                 icon="CodeMedium"
                 size="medium"
@@ -116,7 +121,7 @@ const SfraCustomUrlFieldExtension = () => {
                   });
                 }}
               />
-            )}
+            )} */}
 
             {isRawConfigModalOpen && appConfig && <ConfigModal config={appConfig} onClose={handleCloseModal} />}
           </div>

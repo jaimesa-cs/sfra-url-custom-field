@@ -60,3 +60,152 @@ size.
 ## Reference to documentation
 
 - [Marketplace App Boilerplate](https://www.contentstack.com/docs/developers/developer-hub/marketplace-app-boilerplate/)
+
+# Regex Transform Engine
+
+This utility provides a simple, configurable way to transform input strings (such as URLs) into output strings using regular expressions.  
+It supports:
+
+- Regex **patterns** with capture groups (numbered or named).
+- **Replacements** using `$1`, `$2`, `$<name>`, hardcoded values, or empty strings.
+- **Chaining rules** (apply multiple transformations in sequence).
+- Configurable behavior for unmatched inputs.
+
+---
+
+## Installation
+
+```bash
+# If using TypeScript or ES modules
+import { transformString, TransformRule } from "./regex-transform";
+```
+
+```
+type TransformRule = {
+  pattern: string;        // Regex as a string
+  flags?: string;         // Regex flags, e.g. "i", "g"
+  replacement: string;    // Replacement template ("$1", "$<name>", or literal text)
+  stopOnMatch?: boolean;  // Stop after first match (default: true)
+  description?: string;   // Optional description for debugging
+};
+```
+
+### Convert full product URL to short path
+
+```const rules: TransformRule[] = [
+  {
+    description: "Product page → short /p/:id",
+    pattern: "^https?://[^/]+/product/(\\d+)(?:\\?.*)?$",
+    replacement: "/p/$1",
+  },
+];
+
+transformString("https://example.com/product/123?ref=abc", rules);
+// → "/p/123"
+```
+
+### Strip tracking query params
+
+```const rules: TransformRule[] = [
+  {
+    description: "Drop utm_* query params",
+    pattern: "(\\?|&)(utm_[^=]+=[^&#]*)",
+    flags: "gi",
+    replacement: "",
+    stopOnMatch: false, // keep going for multiple matches
+  },
+];
+
+transformString(
+  "https://ex.com/a/b?x=1&utm_source=foo&utm_medium=bar#frag",
+  rules
+);
+// → "https://ex.com/a/b?x=1#frag"
+```
+
+### Re-map path segments with hardcoded text
+
+```onst rules: TransformRule[] = [
+  {
+    description: "Map /category/:slug → /c/:slug",
+    pattern: "^https?://[^/]+/category/([^/?#]+)",
+    replacement: "/c/$1"
+  }
+];
+
+transformString("https://shop.com/category/dresses?color=blue", rules);
+// → "/c/dresses"
+```
+
+### Use named groups
+
+```const rules: TransformRule[] = [
+  {
+    description: "Extract domain and keep only host",
+    pattern: "^(?:https?://)?(?<host>[^/]+)(?:/.*)?$",
+    flags: "i",
+    replacement: "$<host>"
+  }
+];
+
+transformString("https://sub.example.co.uk/path?q=1", rules);
+// → "sub.example.co.uk"
+```
+
+### Chain multiple transformations
+
+```const rules: TransformRule[] = [
+  {
+    description: "Normalize protocol-less",
+    pattern: "^//",
+    replacement: "https://",
+    stopOnMatch: false
+  },
+  {
+    description: "Collapse duplicate slashes (not after protocol)",
+    pattern: "(?<!:)//+",
+    flags: "g",
+    replacement: "/",
+    stopOnMatch: false
+  },
+  {
+    description: "Remove trailing slash (except root)",
+    pattern: "(.+)/$",
+    replacement: "$1",
+    flags: "g",
+    stopOnMatch: false
+  }
+];
+
+transformString("//example.com///foo///", rules);
+// → "https://example.com/foo"
+```
+
+### JSON Configuration
+
+Rules can be stored in JSON and loaded dynamically:
+
+```
+[
+  {
+    "description": "Product to /p/:id",
+    "pattern": "^https?://[^/]+/product/(\\d+)(?:\\?.*)?$",
+    "replacement": "/p/$1"
+  },
+  {
+    "description": "Drop all utm params",
+    "pattern": "(\\?|&)(utm_[^=]+=[^&#]*)",
+    "flags": "gi",
+    "replacement": "",
+    "stopOnMatch": false
+  }
+]
+
+
+Usage:
+
+import rules from "./rules.json";
+transformString("https://example.com/product/123?utm_source=foo", rules);
+// → "/p/123"
+
+```

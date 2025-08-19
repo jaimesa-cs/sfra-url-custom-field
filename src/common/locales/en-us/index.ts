@@ -16,11 +16,11 @@ const localeTexts = {
     },
   },
   ConfigScreen: {
-    title: "App Configuration",
-    body: "This is the location that contains your app configuration.",
+    title: "SFRA URL Configuration",
+    body: "Please configure URL regex replacement according to your needs.",
     button: {
       text: "Learn More",
-      url: "https://www.contentstack.com/docs/developers/developer-hub/app-config-location/",
+      url: "#",
     },
   },
   CustomField: {
