@@ -31,12 +31,7 @@ export type TransformOptions = {
 };
 
 export function transformString(input: string, rules: TransformRule[], options: TransformOptions = {}): string {
-  const {
-    returnOriginalOnNoMatch = true,
-    onMatch = (r, b, a) => {
-      console.log(`Transforming "${b}" to "${a}" using rule:`, r);
-    },
-  } = options;
+  const { returnOriginalOnNoMatch = true, onMatch } = options;
 
   let output = input;
   let matchedAtLeastOne = false;
@@ -52,7 +47,7 @@ export function transformString(input: string, rules: TransformRule[], options: 
     output = output.replace(re, rule.replacement);
 
     if (onMatch) onMatch(rule, before, output);
-    if (rule.stopOnMatch !== false) break; // default: stop after first match
+    if (rule.stopOnMatch === true) break; // default: stop after first match
   }
 
   if (!matchedAtLeastOne && !returnOriginalOnNoMatch) {

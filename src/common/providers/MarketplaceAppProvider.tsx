@@ -10,16 +10,20 @@ import { ContentType } from "@contentstack/app-sdk/dist/src/types/stack.types";
 
 type ProviderProps = {
   children?: React.ReactNode;
+  excludeUrls?: string[];
 };
 
 /**
  * Marketplace App Provider
  * @param children: React.ReactNode
  */
-export const MarketplaceAppProvider: React.FC<ProviderProps> = ({ children }) => {
+
+export const MarketplaceAppProvider: React.FC<ProviderProps> = ({ children, excludeUrls = [] }) => {
   const [failed, setFailed] = useState<boolean>(false);
   const [appSdk, setAppSdk] = useState<UiLocation | null>(null);
   const [appConfig, setConfig] = useState<IAppConfiguration | null>(null);
+  const [excluded, setExcluded] = useState<boolean>(false);
+
   const [sdkState, setSdkState] = useState<{
     contentType: ContentType | null;
     globalFields: unknown[];
@@ -31,6 +35,12 @@ export const MarketplaceAppProvider: React.FC<ProviderProps> = ({ children }) =>
   });
   // Initialize the SDK and track analytics event
   useEffect(() => {
+    const currentHashedPath = document.location.hash.replace("#", "");
+
+    if (excludeUrls.includes(currentHashedPath)) {
+      setExcluded(true);
+      return;
+    }
     ContentstackAppSDK.init()
       .then(async (appSdk) => {
         setAppSdk(appSdk);
@@ -52,6 +62,10 @@ export const MarketplaceAppProvider: React.FC<ProviderProps> = ({ children }) =>
         setFailed(true);
       });
   }, []);
+
+  if (excluded) {
+    return <>{children}</>;
+  }
 
   // wait until the SDK is initialized. This will ensure the values are set
   // correctly for appSdk.
