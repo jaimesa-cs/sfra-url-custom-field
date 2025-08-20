@@ -209,3 +209,180 @@ transformString("https://example.com/product/123?utm_source=foo", rules);
 // → "/p/123"
 
 ```
+
+TODO: FORMAT THIS
+
+Here’s a README.md section you can drop in that documents all the filtering functions your new DSL supports, with syntax and examples.
+
+## Template Placeholders & Filters
+
+The regex transform engine supports **template placeholders** inside rule replacements.  
+This allows post-processing of regex capture groups using a declarative JSON-only syntax.
+
+### Syntax
+
+${<ref>[|filter[:arg1]][|filter2[:...]]...}
+
+- `<ref>`: the capture group reference:
+  - `$1`, `$2`, … = numbered capture groups
+  - `$<name>` = named capture group
+- `filter`: one or more filters applied in order
+- `:arg` = optional arguments to the filter
+- You can chain multiple filters with `|`
+
+### Example
+
+```json
+{
+  "pattern": "^(?:https?://)?[^/]+/s/[^/]+/([^/]+)/([^/]+)\\.html\\?lang=([A-Za-z]{2}_[A-Za-z]{2})",
+  "flags": "i",
+  "replacement": "/${$3|replace:_:-|lower}/${$1}/${$2}.html"
+}
+
+
+Input:
+
+https://example.com/s/Site123/pull-on-pant/25518704M.html?lang=es_US
+
+
+Output:
+
+/es-us/pull-on-pant/25518704M.html
+
+Available Filters
+lower
+
+Converts the value to lowercase.
+
+"${$1|lower}"
+
+
+ES_US → es_us
+
+upper
+
+Converts the value to uppercase.
+
+"${$1|upper}"
+
+
+es-us → ES-US
+
+trim
+
+Removes whitespace from both ends.
+
+"${$1|trim}"
+
+
+" hello " → "hello"
+
+replace:from:to
+
+Simple string replacement (literal, not regex).
+All occurrences of from are replaced with to.
+
+"${$1|replace:_:-}"
+
+
+es_US → es-US
+
+regexReplace:pattern:repl:flags
+
+Regex-based replacement with optional flags.
+
+"${$1|regexReplace:[0-9]+:###:g}"
+
+
+abc123def456 → abc###def###
+
+default:value
+
+Provides a fallback if the capture group is empty or missing.
+
+"${$1|default:en-us}"
+
+
+If $1 = "es-us" → "es-us"
+
+If $1 = "" → "en-us"
+
+map:tableName
+
+Looks up the value in a named mapping table (provided in options.maps).
+Falls back to the original if not found.
+
+"${$1|lower|map:localeCanonical}"
+
+
+With options:
+
+maps: {
+  localeCanonical: {
+    "es-mx": "es-us",
+    "en-gb": "en-us"
+  }
+}
+
+
+$1 = "ES-MX" → "es-us"
+
+$1 = "fr-fr" → "fr-fr" (unchanged)
+
+substr:start[:length]
+
+Extracts a substring (like String.prototype.substring).
+
+"${$1|substr:0:2}"
+
+
+es-us → es
+
+urlEncode
+
+Encodes the value as a URL component.
+
+"${$1|urlEncode}"
+
+
+es us → es%20us
+
+urlDecode
+
+Decodes a URL-encoded string.
+
+"${$1|urlDecode}"
+
+
+es%20us → es us
+
+Chaining Filters
+
+Filters can be chained in sequence. They are applied left → right.
+
+"${$1|replace:_:-|lower|map:localeCanonical|default:en-us}"
+
+
+Replace _ with -
+
+Lowercase
+
+Map via localeCanonical
+
+If still empty, default to en-us
+
+Notes
+
+Filters are applied only inside ${...} placeholders.
+
+If no filters are used, ${$1} behaves like plain $1.
+
+Unknown filters are ignored (value passes through unchanged).
+
+JSON escaping: remember to escape \ and special regex characters when writing patterns or filter args in JSON.
+
+
+---
+
+Would you like me to also generate a **cheatsheet table** (filters, description, example input/output) for quick scanning at the top of the section?
+```
