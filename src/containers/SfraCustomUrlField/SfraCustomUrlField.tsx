@@ -14,7 +14,7 @@ const SfraCustomUrlFieldExtension = () => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const appConfig = useAppConfig();
   const appSdk = useAppSdk();
-  const [fullSalesforceUrl, setFullSalesforceUrl] = useState<string>("");
+  const [slug, setSlug] = useState<string>("");
   const [autoUrl, setAutoUrl] = useState<boolean>(true);
 
   const ref = React.useRef<HTMLDivElement>(null);
@@ -69,22 +69,10 @@ const SfraCustomUrlFieldExtension = () => {
       if (Array.isArray(cfg.rules)) return cfg.rules;
       // Config keyed by content type uid
       const entryObj: any = customField.entry as any;
-      const typeUid =
-        entryObj?.content_type_uid ||
-        entryObj?._content_type_uid ||
-        (typeof entryObj?.getContentType === "function"
-          ? (() => {
-              try {
-                const ct = entryObj.getContentType();
-                return typeof ct === "string" ? ct : ct?.uid;
-              } catch {
-                return undefined;
-              }
-            })()
-          : undefined) ||
-        newData?.system?.content_type_uid ||
-        newData?._content_type_uid;
-      if (typeUid) {
+      console.log("Resolving rules for entry:", entryObj);
+
+      if (customField?.entry?.content_type?.uid) {
+        const typeUid = customField.entry.content_type.uid;
         const byType = cfg[typeUid];
         if (Array.isArray(byType)) return byType;
         if (byType?.rules && Array.isArray(byType.rules)) return byType.rules;
@@ -118,7 +106,7 @@ const SfraCustomUrlFieldExtension = () => {
           newSlug = transformString(String(productUrl), rulesArr, { context: newData });
           customField.entry.getField("url").setData(newSlug);
         }
-        setFullSalesforceUrl(productUrl);
+        setSlug(newSlug);
       } else if (Object.keys(customField.entry._data || {}).length > 0) {
         customField.entry.getField("url").setData(DEFAULT_URL);
       }
@@ -141,18 +129,15 @@ const SfraCustomUrlFieldExtension = () => {
                 <>
                   <div className="toggle-row">
                     <ToggleSwitch
-                      label="Auto URL"
+                      label="Use SFRA URL"
                       checked={autoUrl}
                       onChange={() => {
                         setAutoUrl(() => {
-                          updateFieldValue(fullSalesforceUrl, !autoUrl);
+                          updateFieldValue(slug, !autoUrl);
                           return !autoUrl;
                         });
                       }}
                     />
-                  </div>
-                  <div className="url-row">
-                    <p className="config-value">{fullSalesforceUrl}</p>
                   </div>
                 </>
               )}
