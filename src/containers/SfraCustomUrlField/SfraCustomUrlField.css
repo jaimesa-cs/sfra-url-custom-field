@@ -1,52 +1,60 @@
-.layout-container {
-  height: 80vh;
-  margin: 0px;
+/* --- SFRA URL Custom Field layout & styling --- */
+/* Ensure flex children can shrink without causing overflow */
+#sfra-url-root .ui-location-wrapper,
+#sfra-url-root .ui-location,
+#sfra-url-root .input-wrapper,
+#sfra-url-root .input-container {
+  min-width: 0 !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box;
 }
 
-.ui-location-wrapper {
-  align-items: flex-start;
-  gap: 0.25rem;
-  align-self: stretch;
-  overflow: hidden !important;
-}
-
-.ui-location {
-  border: 0px;
-  padding: 0.5rem 0;
+/* Stack URL above toggle; left-aligned */
+#sfra-url-root .input-container {
+  display: flex;
   flex-direction: column;
-  justify-content: center;
+  align-items: stretch;
+  gap: 8px;
+}
+
+#sfra-url-root .url-row {
+  display: flex;
+}
+
+#sfra-url-root .toggle-row {
+  display: flex;
   align-items: center;
-  gap: 0rem;
-  align-self: stretch;
-  width: 97vw;
 }
 
-.ui-container {
-  padding: 0.5rem 0rem;
-}
-.input-wrapper {
-  padding: 1rem 0 1rem 0;
+/* URL pill: readable, truncates long URLs, looks like an input */
+#sfra-url-root .config-value {
+  margin: 0;
+  text-align: left; /* override any global p alignment */
+  flex: 1 1 auto;
+  min-width: 0 !important; /* critical when inside flex */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap; /* change to normal if you want wrapping */
+
+  background: #f7f7f9;
+  border: 1px solid #e2e5ea;
+  color: #111827;
+  border-radius: 8px;
+  padding: 8px 12px;
+  line-height: 1.4;
+  font-size: 13px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
 }
 
-.config-container {
-  width: 23.5625rem;
-  justify-content: center;
-  gap: 0.25rem;
+/* Keep toggle from shrinking; align nicely with label */
+#sfra-url-root .toggle-row [data-test-id="cs-toggle-switch"] {
+  flex: 0 0 auto;
+  gap: 0.5rem;
 }
 
-.label {
-  font-size: 0.875rem;
-}
-
-.info {
-  font-size: 0.875rem;
-}
-
-.location-description {
-  width: 25.5625rem;
-}
-
-.location-description-text {
-  white-space: nowrap;
-  word-wrap: break-word;
+/* Optional: ensure the Venus label color is readable in this context */
+#sfra-url-root .Label--color--primary {
+  color: #374151;
+  font-weight: 500;
 }

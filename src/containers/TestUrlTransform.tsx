@@ -75,7 +75,8 @@ const TestUrlTransform = () => {
     if (!parsedRules) return "⚠️ Invalid rules JSON";
     try {
       return `Transformed URL: ${transformString(url, parsedRules)}`;
-    } catch {
+    } catch (e) {
+      console.error("Error during transformation:", e);
       return "⚠️ Error running transformation";
     }
   }, [url, parsedRules]);

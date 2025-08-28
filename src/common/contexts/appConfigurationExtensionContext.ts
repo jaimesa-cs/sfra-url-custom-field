@@ -1,7 +1,7 @@
 import React from "react";
 
 export type InstallationData = {
-  configuration: { sfra_app_configuration?: { rules?: any } };
+  configuration: { sfra_app_configuration?: any };
   serverConfiguration: { [key: string]: unknown };
 };
 

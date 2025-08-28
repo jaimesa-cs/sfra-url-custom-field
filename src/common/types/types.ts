@@ -4,8 +4,9 @@ export interface KeyValueObj {
 
 export interface IAppConfiguration {
   sfra_app_configuration?: {
-    rules?: any;
     jsonEndpoint?: string;
+    inputFieldPath?: string;
+    rules: any;
   };
 }
 

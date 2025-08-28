@@ -5,25 +5,27 @@ import styles from "./AppConfiguration.module.css";
 import { useInstallationData } from "../../common/hooks/useInstallationData";
 import Tooltip from "../Tooltip/Tooltip";
 
-import { EditorState, StateEffect, StateField } from "@codemirror/state";
+import { EditorState, StateEffect } from "@codemirror/state";
 import { EditorView, basicSetup } from "codemirror";
 import { json } from "@codemirror/lang-json";
-import { set } from "lodash";
 
-const sampleConfig = [
-  {
-    description: "Product to /p/:id",
-    pattern: "^https?://[^/]+/product/(\\d+)(?:\\?.*)?$",
-    replacement: "/p/$1",
-  },
-  {
-    description: "Drop all utm params",
-    pattern: "(\\?|&)(utm_[^=]+=[^&#]*)",
-    flags: "gi",
-    replacement: "",
-    stopOnMatch: false,
-  },
-];
+const sampleConfig = {
+  inputFieldPath: "entry::product.data[0].slugUrl",
+  rules: [
+    {
+      description: "Product to /p/:id",
+      pattern: "^https?://[^/]+/product/(\\d+)(?:\\?.*)?$",
+      replacement: "/p/$1",
+    },
+    {
+      description: "Drop all utm params",
+      pattern: "(\\?|&)(utm_[^=]+=[^&#]*)",
+      flags: "gi",
+      replacement: "",
+      stopOnMatch: false,
+    },
+  ],
+};
 
 export const setStatus = StateEffect.define<{ text: string; level?: "info" | "warn" | "error" | "success" } | null>();
 type StatusData = { text: string; level: "info" | "warn" | "error" | "success" } | null;
@@ -41,9 +43,7 @@ const AppConfigurationExtension: React.FC = () => {
         console.log("Updating configuration with value:", value);
         setInstallationData({
           configuration: {
-            sfra_app_configuration: {
-              rules: value,
-            },
+            sfra_app_configuration: value,
           },
           serverConfiguration: {},
         });
@@ -72,12 +72,13 @@ const AppConfigurationExtension: React.FC = () => {
       if (validateTid) clearTimeout(validateTid);
       validateTid = setTimeout(() => {
         const valid = isValidJson(value);
+        console.log("Validating JSON:", value, ", is valid: ", valid);
         if (statusRef.current) {
           statusRef.current.textContent = valid ? "✓ JSON is valid" : "✗ JSON is invalid";
         }
         if (valid) {
           // call your side-effect when valid
-          updateConfig(value);
+          updateConfig(JSON.parse(value));
         }
       }, 200);
     };
@@ -96,7 +97,7 @@ const AppConfigurationExtension: React.FC = () => {
 
     viewRef.current = new EditorView({
       state: EditorState.create({
-        doc: installationData?.configuration?.sfra_app_configuration?.rules ?? JSON.stringify(sampleConfig, null, 2),
+        doc: JSON.stringify(installationData?.configuration?.sfra_app_configuration ?? code, null, 2),
         extensions: [basicSetup, json(), onChangeExtension],
       }),
       parent: editorRef.current,
@@ -127,7 +128,10 @@ const AppConfigurationExtension: React.FC = () => {
                 </div>
               </div>
               <div className={`${styles.inputContainer}`}>
-                <div ref={editorRef} style={{ border: "1px solid #ccc" }} />
+                <div
+                  ref={editorRef}
+                  style={{ width: "100%", maxWidth: "100%", boxSizing: "border-box", borderRadius: "8px" }}
+                />
                 <div
                   ref={statusRef}
                   style={{
@@ -135,8 +139,14 @@ const AppConfigurationExtension: React.FC = () => {
                     fontSize: "12px",
                     borderTop: "1px solid #ccc",
                     background: "#f9f9f9",
+                    width: "100%",
+                    maxWidth: "100%",
+                    boxSizing: "border-box",
+                    borderRadius: "8px",
                   }}
-                />
+                >
+                  Configuraiton Loaded!
+                </div>
               </div>
             </div>
             <div className={`${styles.descriptionContainer}`}>
