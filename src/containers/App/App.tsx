@@ -19,6 +19,7 @@ import { useAppSdk } from "../../common/hooks/useAppSdk";
  */
 // const CustomFieldExtension = React.lazy(() => import("../CustomField/CustomField"));
 const SfraCustomUrlFieldExtension = React.lazy(() => import("../SfraCustomUrlField/SfraCustomUrlField"));
+const SfraFieldModifier = React.lazy(() => import("../SfraFieldModifier/SfraFieldModifier"));
 // const EntrySidebarExtension = React.lazy(() => import("../SidebarWidget/EntrySidebar"));
 const AppConfigurationExtension = React.lazy(() => import("../AppConfiguration/AppConfiguration"));
 const TestUrlTransform = React.lazy(() => import("../TestUrlTransform"));
@@ -37,12 +38,20 @@ function App() {
       <MarketplaceAppProvider excludeUrls={["/test-url-transform"]}>
         <AppConfigurationExtensionProvider>
           <Routes>
-            <Route path="/" element={<Navigate to="/sfra-urlß-custom-field" />} />
+            <Route path="/" element={<Navigate to="/sfra-url-custom-field" />} />
             <Route
               path="/sfra-url-custom-field"
               element={
                 <Suspense>
                   <SfraCustomUrlFieldExtension />
+                </Suspense>
+              }
+            />
+            <Route
+              path="/sfra-url-field-modifier"
+              element={
+                <Suspense>
+                  <SfraFieldModifier />
                 </Suspense>
               }
             />
