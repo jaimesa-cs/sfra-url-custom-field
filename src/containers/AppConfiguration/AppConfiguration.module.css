@@ -86,6 +86,78 @@
   overflow: hidden; /* clip editor gutters */
 }
 
+/* Explicit class for editor container */
+.editorFrame {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+/* Row with status (left) and save button (right) */
+.actionsRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  margin-top: 8px;
+}
+
+.statusBar {
+  padding: 4px 8px;
+  font-size: 12px;
+  border: 1px solid #e5e7eb;
+  background: #f9f9f9;
+  color: #4b5563; /* gray-600 */
+  box-sizing: border-box;
+  border-radius: 6px;
+  flex: 1 1 auto;
+}
+
+/* Playground (Accordion) */
+.playground {
+  margin-top: 16px;
+}
+
+.playgroundRow {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.playgroundCol {
+  flex: 1 1 320px;
+  min-width: 0;
+}
+
+.textArea,
+.textInput {
+  width: 100%;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 13px;
+  box-sizing: border-box;
+}
+
+.textArea {
+  min-height: 160px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+    "Liberation Mono", "Courier New", monospace;
+}
+
+.resultBox {
+  padding: 8px 12px;
+  font-size: 13px;
+  color: #374151;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+}
+
 /* Optional: refine CodeMirror visuals without leaking globally */
 :global(.cm-editor) {
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
@@ -95,7 +167,6 @@
 /* Small helper text area under the editor */
 .descriptionContainer p,
 .inputContainer div:last-child {
-  color: #4b5563; /* gray-600 */
   font-size: 12px;
   line-height: 1.5;
 }

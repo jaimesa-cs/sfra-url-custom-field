@@ -3,11 +3,9 @@ export interface KeyValueObj {
 }
 
 export interface IAppConfiguration {
-  sfra_app_configuration?: {
-    jsonEndpoint?: string;
-    inputFieldPath?: string;
-    rules: any;
-  };
+  // Configuration can be a map keyed by content type UID, each with its own rules array
+  // or a legacy shape with top-level `rules`.
+  sfra_app_configuration?: any;
 }
 
 export type ChildProp = {

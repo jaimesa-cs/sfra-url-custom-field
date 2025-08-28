@@ -60,19 +60,62 @@ const SfraCustomUrlFieldExtension = () => {
       return cur;
     };
 
+    // Resolve rules for this entry, supporting config by content type key
+    const resolveRules = (cfg: any, newData: any): any[] => {
+      if (!cfg) return [];
+      // Direct array at root
+      if (Array.isArray(cfg)) return cfg;
+      // Legacy shape: { rules: [...] }
+      if (Array.isArray(cfg.rules)) return cfg.rules;
+      // Config keyed by content type uid
+      const entryObj: any = customField.entry as any;
+      const typeUid =
+        entryObj?.content_type_uid ||
+        entryObj?._content_type_uid ||
+        (typeof entryObj?.getContentType === "function"
+          ? (() => {
+              try {
+                const ct = entryObj.getContentType();
+                return typeof ct === "string" ? ct : ct?.uid;
+              } catch {
+                return undefined;
+              }
+            })()
+          : undefined) ||
+        newData?.system?.content_type_uid ||
+        newData?._content_type_uid;
+      if (typeUid) {
+        const byType = cfg[typeUid];
+        if (Array.isArray(byType)) return byType;
+        if (byType?.rules && Array.isArray(byType.rules)) return byType.rules;
+      }
+      // Fallback: first key value
+      const firstKey = Object.keys(cfg)[0];
+      const firstVal = firstKey ? cfg[firstKey] : undefined;
+      if (Array.isArray(firstVal)) return firstVal;
+      if (firstVal?.rules && Array.isArray(firstVal.rules)) return firstVal.rules;
+      return [];
+    };
+
     customField.entry.onChange(async (newData) => {
       if (!newData) return;
-      // Path is always relative to entry (newData)
-      const path = appConfig?.sfra_app_configuration?.inputFieldPath || "product.data[0].slugUrl";
-      const productUrl = getValueAtPath(newData, path);
+      const cfg = appConfig?.sfra_app_configuration;
+      const rules: any[] = resolveRules(cfg, newData);
+
+      // Determine initial input for the pipeline:
+      // Prefer the first rule that declares an inputFieldPath
+      const firstInputPath = rules.find((r) => typeof r?.inputFieldPath === "string")?.inputFieldPath;
+      const fallbackPath = "product.data[0].slugUrl";
+      const initialPath = firstInputPath || fallbackPath;
+      const productUrl = getValueAtPath(newData, initialPath);
       const autoUrlEnabled = newData?.sfra_url?.autoUrl;
       let newSlug = productUrl;
 
       if (productUrl) {
-        const rules = appConfig?.sfra_app_configuration?.rules || [];
+        const rulesArr = Array.isArray(rules) ? rules : [];
 
-        if (autoUrlEnabled && rules.length) {
-          newSlug = transformString(productUrl, rules);
+        if (autoUrlEnabled && rulesArr.length) {
+          newSlug = transformString(String(productUrl), rulesArr, { context: newData });
           customField.entry.getField("url").setData(newSlug);
         }
         setFullSalesforceUrl(productUrl);

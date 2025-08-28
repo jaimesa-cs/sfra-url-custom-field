@@ -1,41 +1,41 @@
 import React from "react";
 import { transformString } from "../common/utils/regex-transform";
+import "./TestUrlTransform.css";
 
 const DEFAULT_URL =
   "https://zybx-009.dx.commercecloud.salesforce.com/s/RefArch/mens-cotton-stretch-pant/44736828M.html?lang=en_US";
 
-const DEFAULT_RULES = [
+const DEFAULT_RULES = {
+  plp: [
   {
-    description: "With lang: /s/:site/:slug/:id.html?lang=ll_CC → /ll-cc/:slug/:id.html",
-    pattern: "^(https?://)?[^/]+/s/[^/]+/([^/]+)/([^/?#]+)\\.html\\?[^#]*\\blang=([a-zA-Z]{2})_([a-zA-Z]{2})\\b.*$",
+    inputFieldPath: "product.data[0].slugUrl",
+    id: "rule_1",
+    description: "Strip host + site → keep path/id (supports optional query)",
+    pattern: "^(?:https?://)?[^/]+/s/[^/]+/([^?#]+)(?:\\?[^#]*)?$",
     flags: "i",
-    replacement: "/$4-$5/$2/$3.html",
+    replacement: "/$1",
   },
-  {
-    description: "No lang: default to en-us",
-    pattern: "^(https?://)?[^/]+/s/[^/]+/([^/]+)/([^/?#]+)\\.html(?:\\?.*)?(?:#.*)?$",
-    flags: "i",
-    replacement: "/en-us/$2/$3.html",
+    // {
+    //   id: "rule_3",
+    //   fromMap: true,
+    //   input: "/$rule_1",
+    //   description: "Prefix locale",
+    //   pattern: "^(.*)$",
+    //   replacement: "/en-us/${$1|lower}",
+    //   stopOnMatch: false,
+    // },
+  ],
+};
+const DEFAULT_ENTRY = {
+  product: {
+    data: [
+      {
+        slugUrl:
+          "https://zybx-009.dx.commercecloud.salesforce.com/s/RefArch/mens-cotton-stretch-pant/44736828M.html?lang=en_US",
+      },
+    ],
   },
-  {
-    description: "Normalize locale underscore to hyphen (es_US → es-US)",
-    pattern: "^/([a-zA-Z]{2})_([a-zA-Z]{2})/",
-    flags: "i",
-    replacement: "/$1-$2/",
-  },
-  {
-    description: "Force lowercase locale (es-US → es-us, EN-us → en-us, etc.)",
-    pattern: "^/(ES|Es|es)-(US|Us|us)/",
-    flags: "i",
-    replacement: "/es-us/",
-  },
-  {
-    description: "Force lowercase locale (EN-us → en-us)",
-    pattern: "^/(EN|En|en)-(US|Us|us)/",
-    flags: "i",
-    replacement: "/en-us/",
-  },
-];
+};
 
 // ---- localStorage-backed state (SSR-safe)
 function useLocalStorageState(key: string, initialValue: string) {
@@ -57,60 +57,186 @@ function useLocalStorageState(key: string, initialValue: string) {
 const TestUrlTransform = () => {
   // Load from LS or fall back to defaults (runs only once via lazy init)
   const [url, setUrl] = useLocalStorageState("url", DEFAULT_URL);
+  const [contentType, setContentType] = useLocalStorageState("contentType", "plp");
   const [rulesText, setRulesText] = useLocalStorageState("rules", JSON.stringify(DEFAULT_RULES, null, 2));
+  const [entryText, setEntryText] = useLocalStorageState("entry", JSON.stringify(DEFAULT_ENTRY, null, 2));
 
   // Parse rules safely; memoized
-  const { parsedRules, rulesError } = React.useMemo(() => {
+  const { parsedRoot, rulesError } = React.useMemo(() => {
     try {
       const parsed = JSON.parse(rulesText);
-      if (!Array.isArray(parsed)) throw new Error("Rules must be an array.");
-      return { parsedRules: parsed as any[], rulesError: null as string | null };
+      return { parsedRoot: parsed, rulesError: null as string | null };
     } catch (e: any) {
-      return { parsedRules: null, rulesError: e?.message ?? "Invalid JSON" };
+      return { parsedRoot: null, rulesError: e?.message ?? "Invalid JSON" };
     }
   }, [rulesText]);
 
-  // Derive result (pure computation → no setState loops)
-  const result = React.useMemo(() => {
-    if (!parsedRules) return "⚠️ Invalid rules JSON";
+  const entry = React.useMemo(() => {
     try {
-      return `Transformed URL: ${transformString(url, parsedRules)}`;
-    } catch (e) {
-      console.error("Error during transformation:", e);
-      return "⚠️ Error running transformation";
+      return JSON.parse(entryText);
+    } catch {
+      return {};
     }
-  }, [url, parsedRules]);
+  }, [entryText]);
+
+  // Helper to safely resolve deep paths like "product.data[0].slugUrl"
+  const getValueAtPath = React.useCallback((root: any, path: string): any => {
+    if (!root || !path) return undefined;
+    const normalized = path.replace(/\[(\d+)\]/g, ".$1").replace(/^\./, "");
+    const parts = normalized.split(".").filter(Boolean);
+    let cur: any = root;
+    for (const p of parts) {
+      if (cur == null) return undefined;
+      const key: any = /^\d+$/.test(p) ? Number(p) : p;
+      cur = cur[key];
+    }
+    return cur;
+  }, []);
+
+  // Derive result and map (pure computation → no setState loops)
+  const { result, mapJson } = React.useMemo(() => {
+    if (!parsedRoot) {
+      console.warn("[TestUrlTransform] Invalid rules JSON");
+      return { result: "⚠️ Invalid rules JSON", mapJson: "{}" };
+    }
+    let rulesArr: any[] | null = null;
+    const root = parsedRoot as any;
+    console.log("[TestUrlTransform] parsedRoot:", root);
+    if (Array.isArray(root)) {
+      rulesArr = root;
+    } else if (root && typeof root === "object") {
+      const val = root[contentType];
+      if (Array.isArray(val)) rulesArr = val;
+      else if (val && Array.isArray(val.rules)) rulesArr = val.rules;
+      if (!rulesArr) {
+        const firstKey = Object.keys(root)[0];
+        const firstVal = firstKey ? root[firstKey] : undefined;
+        if (Array.isArray(firstVal)) rulesArr = firstVal;
+        else if (firstVal && Array.isArray(firstVal.rules)) rulesArr = firstVal.rules;
+      }
+    }
+    if (!Array.isArray(rulesArr)) {
+      console.warn("[TestUrlTransform] No rules found for contentType:", contentType);
+      return { result: "⚠️ No rules found", mapJson: "{}" };
+    }
+    try {
+      const firstInputPath = rulesArr.find((r: any) => typeof r?.inputFieldPath === "string")?.inputFieldPath;
+      const fallbackPath = "product.data[0].slugUrl";
+      const initialPath = firstInputPath || fallbackPath;
+      const initialInput = getValueAtPath(entry, initialPath) ?? url;
+      console.log("[TestUrlTransform] rules selected:", rulesArr);
+      console.log("[TestUrlTransform] initialPath:", initialPath);
+      console.log("[TestUrlTransform] initialInput:", initialInput);
+      let lastMap: Record<string, string> = {};
+      const out = transformString(String(initialInput), rulesArr as any[], {
+        context: entry,
+        onRuleEvaluated: ({ rule, input, pattern, replacement, matched }) => {
+          console.log(
+            "[Transform:onRuleEvaluated]",
+            rule.id || rule.description || rule.pattern,
+            { input, pattern, replacement, matched }
+          );
+        },
+        onMatch: (rule, before, after) => {
+          const tag = rule.id || rule.description || rule.pattern;
+          console.log("[Transform:onMatch]", tag, { before, after });
+        },
+        collectMap: (m) => (lastMap = m),
+      });
+      console.log("[TestUrlTransform] outputsMap:", lastMap);
+      console.log("[TestUrlTransform] final output:", out);
+      return { result: out, mapJson: JSON.stringify(lastMap, null, 2) };
+    } catch (e) {
+      console.error("[TestUrlTransform] Error during transformation:", e);
+      return { result: "⚠️ Error running transformation", mapJson: "{}" };
+    }
+  }, [url, parsedRoot, entry, getValueAtPath, contentType]);
 
   return (
-    <div>
-      <h2>Test URL Transform</h2>
-      <p>This is a test component for URL transformation.</p>
-
-      <textarea
-        rows={30}
-        name="rules"
-        placeholder="Enter transformation rules"
-        onChange={(e) => setRulesText(e.target.value)}
-        value={rulesText}
-        style={{ width: "100%", fontFamily: "monospace" }}
-      />
-
-      <input
-        type="text"
-        placeholder="Enter URL"
-        onChange={(e) => setUrl(e.target.value)}
-        value={url}
-        style={{ width: "100%", marginTop: 12 }}
-      />
-
-      {rulesError && (
-        <div role="alert" style={{ color: "#b00", marginTop: 8 }}>
-          JSON error: {rulesError}
+    <div className="test-layout-container">
+      <div className="test-card">
+        <div className="test-header">
+          <h2>Test URL Transform</h2>
+          <p>Use rules and entry JSON to simulate transformations.</p>
         </div>
-      )}
 
-      <div style={{ marginTop: 16 }}>
-        <strong>RESULT: {result}</strong>
+        <div className="test-section">
+          <label className="test-label" htmlFor="contentType">Content Type Key</label>
+          <input
+            id="contentType"
+            className="test-input"
+            type="text"
+            placeholder="e.g. plp, pdp..."
+            onChange={(e) => setContentType(e.target.value)}
+            value={contentType}
+          />
+        </div>
+
+        {/* Entry JSON at the top */}
+        <div className="test-section">
+          <label className="test-label" htmlFor="entry">
+            Entry JSON (context)
+          </label>
+          <textarea
+            id="entry"
+            className="test-textarea"
+            rows={16}
+            name="entry"
+            placeholder="Entry JSON (used as context for inputFieldPath)"
+            onChange={(e) => setEntryText(e.target.value)}
+            value={entryText}
+          />
+        </div>
+
+        {/* Side-by-side rules and outputs map */}
+        <div className="test-row">
+          <div className="test-col">
+            <div className="test-section">
+              <label className="test-label" htmlFor="rules">
+                Rules JSON
+              </label>
+              <textarea
+                id="rules"
+                className="test-textarea"
+                rows={16}
+                name="rules"
+                placeholder="Enter transformation rules"
+                onChange={(e) => setRulesText(e.target.value)}
+                value={rulesText}
+              />
+            </div>
+          </div>
+          <div className="test-col">
+            <div className="test-section">
+              <label className="test-label" htmlFor="map">
+                Outputs Map
+              </label>
+              <textarea id="map" className="test-textarea" rows={16} name="map" readOnly value={mapJson} />
+            </div>
+          </div>
+        </div>
+
+        <div className="test-section">
+          <label className="test-label" htmlFor="url">
+            URL (fallback input)
+          </label>
+          <input
+            id="url"
+            className="test-input"
+            type="text"
+            placeholder="Enter URL"
+            onChange={(e) => setUrl(e.target.value)}
+            value={url}
+          />
+        </div>
+
+        {rulesError && (
+          <div role="alert" className="test-alert">
+            JSON error: {rulesError}
+          </div>
+        )}
+
+        <div className="test-result">Transformed URL: {result}</div>
       </div>
     </div>
   );
