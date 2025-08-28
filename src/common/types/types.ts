@@ -5,7 +5,7 @@ export interface KeyValueObj {
 export interface IAppConfiguration {
   // Configuration can be a map keyed by content type UID, each with its own rules array
   // or a legacy shape with top-level `rules`.
-  sfra_app_configuration?: any;
+  app_configuration?: any;
 }
 
 export type ChildProp = {

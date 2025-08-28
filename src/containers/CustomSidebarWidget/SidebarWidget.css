@@ -1,9 +1,9 @@
-/* Keep styling consistent with SfraCustomUrlField */
+/* Keep styling consistent with CustomUrlField */
 
-#sfra-field-mod-root .ui-location-wrapper,
-#sfra-field-mod-root .ui-location,
-#sfra-field-mod-root .input-wrapper,
-#sfra-field-mod-root .input-container {
+#field-mod-root .ui-location-wrapper,
+#field-mod-root .ui-location,
+#field-mod-root .input-wrapper,
+#field-mod-root .input-container {
   min-width: 0;
   width: 100%;
   max-width: 100%;
@@ -11,7 +11,7 @@
 }
 
 /* Place primary action top-left with padding */
-#sfra-field-mod-root .ui-location-wrapper {
+#field-mod-root .ui-location-wrapper {
   display: flex;
   align-items: flex-start;
   justify-content: flex-start;
@@ -19,28 +19,28 @@
 }
 
 /* Stack button on top, then inputs */
-#sfra-field-mod-root .input-container {
+#field-mod-root .input-container {
   display: flex;
   flex-direction: column;
   align-items: stretch;
   gap: 8px;
 }
 
-#sfra-field-mod-root .button-row {
+#field-mod-root .button-row {
   display: flex;
   align-items: center;
-  justify-content: flex-start; /* align left */
+  justify-content: center; /* center horizontally */
   padding: 8px; /* at least 8px around the button */
 }
 
-#sfra-field-mod-root .url-row,
-#sfra-field-mod-root .result-row {
+#field-mod-root .url-row,
+#field-mod-root .result-row {
   display: flex;
 }
 
 /* URL pill style */
-#sfra-field-mod-root .config-value,
-#sfra-field-mod-root .result-value {
+#field-mod-root .config-value,
+#field-mod-root .result-value {
   margin: 0;
   text-align: left;
   flex: 1 1 auto;
@@ -60,7 +60,7 @@
 }
 
 /* Differentiate result line slightly */
-#sfra-field-mod-root .result-value {
+#field-mod-root .result-value {
   background: #eef2ff; /* light indigo */
   border-color: #c7d2fe;
 }

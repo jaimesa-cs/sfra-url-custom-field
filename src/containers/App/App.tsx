@@ -18,8 +18,9 @@ import { useAppSdk } from "../../common/hooks/useAppSdk";
  * improving the page load time
  */
 // const CustomFieldExtension = React.lazy(() => import("../CustomField/CustomField"));
-const SfraCustomUrlFieldExtension = React.lazy(() => import("../SfraCustomUrlField/SfraCustomUrlField"));
-const SfraFieldModifier = React.lazy(() => import("../SfraFieldModifier/SfraFieldModifier"));
+const CustomUrlFieldExtension = React.lazy(() => import("../CustomUrlField/CustomUrlField"));
+const FieldModifier = React.lazy(() => import("../CustomFieldModifier/FieldModifier"));
+const SidebarWidget = React.lazy(() => import("../CustomSidebarWidget/SidebarWidget"));
 // const EntrySidebarExtension = React.lazy(() => import("../SidebarWidget/EntrySidebar"));
 const AppConfigurationExtension = React.lazy(() => import("../AppConfiguration/AppConfiguration"));
 const TestUrlTransform = React.lazy(() => import("../TestUrlTransform"));
@@ -38,20 +39,28 @@ function App() {
       <MarketplaceAppProvider excludeUrls={["/test-url-transform"]}>
         <AppConfigurationExtensionProvider>
           <Routes>
-            <Route path="/" element={<Navigate to="/sfra-url-custom-field" />} />
+            <Route path="/" element={<Navigate to="/url-custom-field" />} />
             <Route
-              path="/sfra-url-custom-field"
+              path="/url-custom-field"
               element={
                 <Suspense>
-                  <SfraCustomUrlFieldExtension />
+                  <CustomUrlFieldExtension />
                 </Suspense>
               }
             />
             <Route
-              path="/sfra-url-field-modifier"
+              path="/url-field-modifier"
               element={
                 <Suspense>
-                  <SfraFieldModifier />
+                  <FieldModifier />
+                </Suspense>
+              }
+            />
+            <Route
+              path="/url-sidebar-widget"
+              element={
+                <Suspense>
+                  <SidebarWidget />
                 </Suspense>
               }
             />

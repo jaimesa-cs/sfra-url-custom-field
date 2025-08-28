@@ -16,8 +16,8 @@ const localeTexts = {
     },
   },
   ConfigScreen: {
-    title: "SFRA URL Configuration",
-    body: "Please configure URL regex replacement according to your needs.",
+    title: "URL Configuration",
+    body: "Please configure URL transform rules according to your needs.",
     button: {
       text: "Learn More",
       url: "#",

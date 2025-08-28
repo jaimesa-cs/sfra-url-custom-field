@@ -1,26 +1,25 @@
 import React, { useCallback } from "react";
-import { Button } from "@contentstack/venus-components";
+import { Button, Info, Icon } from "@contentstack/venus-components";
 import { useAppConfig } from "../../common/hooks/useAppConfig";
 import { useAppSdk } from "../../common/hooks/useAppSdk";
 import { transformString } from "../../common/utils/regex-transform";
-import { useAppLocation } from "../../common/hooks/useAppLocation";
 import "@contentstack/venus-components/build/main.css";
-import "./SfraFieldModifier.css";
-import { set } from "lodash";
+import "./SidebarWidget.css";
 
-const SfraFieldModifier: React.FC = () => {
+const SidebarWidget: React.FC = () => {
   const appConfig = useAppConfig();
   const appSdk = useAppSdk();
-  const { location } = useAppLocation();
 
   const [, setInitialInput] = React.useState<string>("");
   const [isRunning, setIsRunning] = React.useState<boolean>(false);
   const [isLoading, setIsLoading] = React.useState<boolean>(true);
+  const [isEnabled, setIsEnabled] = React.useState<boolean>(false);
+  const [warningMessage, setWarningMessage] = React.useState<string | null>(null);
 
   const updateFieldValue = useCallback(
     (url: string) => {
-      if (appSdk?.location?.FieldModifierLocation) {
-        appSdk.location.FieldModifierLocation.entry
+      if (appSdk?.location?.SidebarWidget) {
+        appSdk.location.SidebarWidget.entry
           .getField("url")
           .setData(url)
           .catch((e) => {
@@ -33,20 +32,16 @@ const SfraFieldModifier: React.FC = () => {
 
   // Resolve rules array from configuration (supports array or keyed by content type)
   const resolveRules = React.useCallback(
-    (cfg: any, entryData: any): any[] => {
+    (cfg: any): any[] => {
       if (!cfg) return [];
-      if (Array.isArray(cfg)) return cfg;
-      if (Array.isArray(cfg?.rules)) return cfg.rules;
-      const typeUid = appSdk?.location?.FieldModifierLocation?.entry?.content_type?.uid;
+      const typeUid = appSdk?.location?.SidebarWidget?.entry?.content_type?.uid;
+
       if (typeUid) {
         const byType = cfg[typeUid];
+
         if (Array.isArray(byType)) return byType;
         if (Array.isArray(byType?.rules)) return byType.rules;
       }
-      const firstKey = Object.keys(cfg || {})[0];
-      const firstVal = firstKey ? cfg[firstKey] : undefined;
-      if (Array.isArray(firstVal)) return firstVal;
-      if (Array.isArray(firstVal?.rules)) return firstVal.rules;
       return [];
     },
     [appSdk]
@@ -67,40 +62,48 @@ const SfraFieldModifier: React.FC = () => {
   }, []);
 
   React.useEffect(() => {
-    if (appSdk?.location?.FieldModifierLocation) {
-      const frame = appSdk.location.FieldModifierLocation.frame;
-      let width = 178;
-      if (appSdk?.location?.FieldModifierLocation?.field.schema.uid !== "url") {
-        width = 350;
+    console.log(warningMessage);
+    if (appConfig && appSdk?.location?.SidebarWidget) {
+      const rules = resolveRules(appConfig?.app_configuration);
+
+      if (rules.length > 0) {
+        setIsEnabled(true);
+        setWarningMessage(null);
+      } else {
+        setIsEnabled(false);
+        setWarningMessage(
+          "No configuration found for this content type. for the current content type: " +
+            appSdk?.location?.SidebarWidget?.entry?.content_type?.uid || ""
+        );
       }
-      frame.updateDimension({ height: 60, width });
       setIsLoading(false);
-      //   frame.disableAutoResizing();
+      console.log("SidebarWidget config", rules);
     }
-  }, [location]);
+  }, [appConfig, appSdk]);
 
   const runTransform = React.useCallback(() => {
-    console.log("Running transform...", appConfig?.sfra_app_configuration);
-    if (!appSdk || !appConfig?.sfra_app_configuration || !appSdk?.location?.FieldModifierLocation) return;
+    if (!appSdk || !appConfig?.app_configuration || !appSdk?.location?.SidebarWidget) return;
     setIsRunning(true);
     try {
-      const cfg = appConfig.sfra_app_configuration;
-      const entryData = appSdk.location.FieldModifierLocation.entry.getData() || {};
-      const rules = resolveRules(cfg, entryData);
+      const cfg = appConfig.app_configuration;
+      const rules = resolveRules(cfg);
+
+      if (rules.length === 0) {
+        setIsRunning(false);
+        setWarningMessage("No transformation rules to process");
+        return;
+      }
+
+      const entryData = appSdk.location.SidebarWidget.entry.getData() || {};
       const firstInputPath = rules.find((r: any) => typeof r?.inputFieldPath === "string")?.inputFieldPath;
       const fallbackPath = "product.data[0].slugUrl";
       const initialPath = firstInputPath || fallbackPath;
-      console.log("Using input path:", initialPath);
       const baseInput = getValueAtPath(entryData, initialPath) ?? "";
-      setInitialInput(String(baseInput));
 
-      if (!baseInput || !rules.length) {
-        setIsRunning(false);
-        console.warn("No input or rules to process");
-        return;
-      }
+      setInitialInput(String(baseInput));
       const out = transformString(String(baseInput), rules, { context: entryData });
       updateFieldValue(out);
+      setWarningMessage(null);
     } catch (e) {
       // Silent fail to UI state
     } finally {
@@ -109,20 +112,32 @@ const SfraFieldModifier: React.FC = () => {
   }, [appConfig, getValueAtPath, resolveRules]);
 
   return !appConfig || isLoading ? null : (
-    <div className="layout-container" id="sfra-field-mod-root">
+    <div className="layout-container" id="field-mod-root">
       <div className="ui-location-wrapper">
         <div className="ui-location">
           <div className="input-wrapper">
             <div className="input-container">
-              <div className="button-row">
-                {appSdk?.location?.FieldModifierLocation?.field.schema.uid === "url" ? (
-                  <Button onClick={runTransform} disabled={isRunning}>
-                    {isRunning ? "Applying..." : "Apply SFRA URL"}
-                  </Button>
-                ) : (
-                  <p>This modifier only works on the &apos;url&apos; field.</p>
-                )}
-              </div>
+              {!warningMessage && (
+                <>
+                  <div className="button-row">
+                    <Button onClick={runTransform} disabled={isRunning || !isEnabled}>
+                      {isRunning ? "Applying..." : "Apply URL"}
+                    </Button>
+                  </div>
+
+                  <Info
+                    version="v2"
+                    type="light"
+                    icon={<Icon icon="InformationCircle" />}
+                    content={
+                      "This extension allows editors to apply a URL pattern directly into the entry's URL fieldby clicking the button above."
+                    }
+                  />
+                </>
+              )}
+              {warningMessage && (
+                <Info version="v2" type="warning" icon={<Icon icon="WarningBold" />} content={warningMessage} />
+              )}
             </div>
           </div>
         </div>
@@ -131,4 +146,4 @@ const SfraFieldModifier: React.FC = () => {
   );
 };
 
-export default SfraFieldModifier;
+export default SidebarWidget;

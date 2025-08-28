@@ -11,46 +11,15 @@ import { json } from "@codemirror/lang-json";
 import { Button, Accordion } from "@contentstack/venus-components";
 import { transformString } from "../../common/utils/regex-transform";
 
-const sampleConfig = {
-  plp: [
-    {
-      inputFieldPath: "product.data[0].slugUrl",
-      id: "rule_1",
-      description: "Product to /p/:id",
-      pattern: "^https?://[^/]+/product/(\\d+)(?:\\?.*)?$",
-      replacement: "/p/$1",
-    },
-    {
-      id: "rule_2",
-      description: "Drop all utm params",
-      pattern: "(\\?|&)(utm_[^=]+=[^&#]*)",
-      flags: "gi",
-      replacement: "",
-      stopOnMatch: false,
-    },
-    // Example of building from map and referencing ids in input/pattern
-    // {
-    //   id: "rule_3",
-    //   fromMap: true,
-    //   input: "/$rule_1/$rule_2/file.html",
-    //   description: "Build composite path from map",
-    //   pattern: "^(.*)$",
-    //   flags: "i",
-    //   replacement: "/en-us/${$1|lower}",
-    //   stopOnMatch: false,
-    // },
-  ],
-};
-
 export const setStatus = StateEffect.define<{ text: string; level?: "info" | "warn" | "error" | "success" } | null>();
-type StatusData = { text: string; level: "info" | "warn" | "error" | "success" } | null;
 
 const AppConfigurationExtension: React.FC = () => {
   const { installationData, setInstallationData } = useInstallationData();
   const editorRef = useRef<HTMLDivElement>(null);
   const statusRef = useRef<HTMLDivElement>(null);
   const viewRef = useRef<EditorView | null>(null);
-  const [code, setCode] = useState<string>(JSON.stringify(sampleConfig, null, 2));
+
+  const [code, setCode] = useState<string>(JSON.stringify(installationData?.configuration?.app_configuration, null, 2));
   const [isJsonValid, setIsJsonValid] = useState<boolean>(true);
   // Playground state
   const [playEntry, setPlayEntry] = useState<string>(
@@ -79,7 +48,7 @@ const AppConfigurationExtension: React.FC = () => {
         console.log("Updating configuration with value:", value);
         setInstallationData({
           configuration: {
-            sfra_app_configuration: value,
+            app_configuration: value,
           },
           serverConfiguration: {},
         });
@@ -108,7 +77,6 @@ const AppConfigurationExtension: React.FC = () => {
       if (validateTid) clearTimeout(validateTid);
       validateTid = setTimeout(() => {
         const valid = isValidJson(value);
-        console.log("Validating JSON:", value, ", is valid: ", valid);
         if (statusRef.current) {
           statusRef.current.textContent = valid ? "✓ JSON is valid" : "✗ JSON is invalid";
         }
@@ -130,7 +98,7 @@ const AppConfigurationExtension: React.FC = () => {
 
     viewRef.current = new EditorView({
       state: EditorState.create({
-        doc: JSON.stringify(installationData?.configuration?.sfra_app_configuration ?? code, null, 2),
+        doc: JSON.stringify(installationData?.configuration?.app_configuration ?? code, null, 2),
         extensions: [basicSetup, json(), onChangeExtension],
       }),
       parent: editorRef.current,

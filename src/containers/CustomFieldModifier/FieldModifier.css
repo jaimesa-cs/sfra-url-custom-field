@@ -1,0 +1,66 @@
+/* Keep styling consistent with CustomUrlField */
+
+#field-mod-root .ui-location-wrapper,
+#field-mod-root .ui-location,
+#field-mod-root .input-wrapper,
+#field-mod-root .input-container {
+  min-width: 0;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+/* Place primary action top-left with padding */
+#field-mod-root .ui-location-wrapper {
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-start;
+  padding: 8px; /* at least 8px around content */
+}
+
+/* Stack button on top, then inputs */
+#field-mod-root .input-container {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+}
+
+#field-mod-root .button-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start; /* align left */
+  padding: 8px; /* at least 8px around the button */
+}
+
+#field-mod-root .url-row,
+#field-mod-root .result-row {
+  display: flex;
+}
+
+/* URL pill style */
+#field-mod-root .config-value,
+#field-mod-root .result-value {
+  margin: 0;
+  text-align: left;
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  background: #f7f7f9;
+  border: 1px solid #e2e5ea;
+  color: #111827;
+  border-radius: 8px;
+  padding: 8px 12px;
+  line-height: 1.4;
+  font-size: 13px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+
+/* Differentiate result line slightly */
+#field-mod-root .result-value {
+  background: #eef2ff; /* light indigo */
+  border-color: #c7d2fe;
+}

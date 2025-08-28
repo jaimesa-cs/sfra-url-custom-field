@@ -36,7 +36,7 @@ export const MarketplaceAppProvider: React.FC<ProviderProps> = ({ children, excl
   // Initialize the SDK and track analytics event
   useEffect(() => {
     const currentHashedPath = document.location.hash.replace("#", "");
-    console.log("Current hashed path:", document.location);
+    // console.log("Current hashed path:", document.location);
     if (excludeUrls.includes(currentHashedPath)) {
       setExcluded(true);
       return;

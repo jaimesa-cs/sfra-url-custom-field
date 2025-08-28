@@ -1,9 +1,9 @@
-/* --- SFRA URL Custom Field layout & styling --- */
+/* --- URL Custom Field layout & styling --- */
 /* Ensure flex children can shrink without causing overflow */
-#sfra-url-root .ui-location-wrapper,
-#sfra-url-root .ui-location,
-#sfra-url-root .input-wrapper,
-#sfra-url-root .input-container {
+#url-root .ui-location-wrapper,
+#url-root .ui-location,
+#url-root .input-wrapper,
+#url-root .input-container {
   min-width: 0 !important;
   width: 100% !important;
   max-width: 100% !important;
@@ -11,24 +11,24 @@
 }
 
 /* Stack URL above toggle; left-aligned */
-#sfra-url-root .input-container {
+#url-root .input-container {
   display: flex;
   flex-direction: column;
   align-items: stretch;
   gap: 8px;
 }
 
-#sfra-url-root .url-row {
+#url-root .url-row {
   display: flex;
 }
 
-#sfra-url-root .toggle-row {
+#url-root .toggle-row {
   display: flex;
   align-items: center;
 }
 
 /* URL pill: readable, truncates long URLs, looks like an input */
-#sfra-url-root .config-value {
+#url-root .config-value {
   margin: 0;
   text-align: left; /* override any global p alignment */
   flex: 1 1 auto;
@@ -48,13 +48,13 @@
 }
 
 /* Keep toggle from shrinking; align nicely with label */
-#sfra-url-root .toggle-row [data-test-id="cs-toggle-switch"] {
+#url-root .toggle-row [data-test-id="cs-toggle-switch"] {
   flex: 0 0 auto;
   gap: 0.5rem;
 }
 
 /* Optional: ensure the Venus label color is readable in this context */
-#sfra-url-root .Label--color--primary {
+#url-root .Label--color--primary {
   color: #374151;
   font-weight: 500;
 }
