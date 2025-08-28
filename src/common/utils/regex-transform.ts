@@ -36,6 +36,10 @@ export type TransformRule = {
    * Supports `$rule_<id>` tokens that are expanded from the running outputs map.
    */
   input?: string;
+  /** When inputFieldPath includes "[*]", treats as array rule and joins results */
+  startIndex?: number;
+  endIndex?: number;
+  joinWith?: string;
 };
 
 export type TransformOptions = {
@@ -212,12 +216,139 @@ function expandMapTemplate(template: string, outputs: Record<string, string>): s
 
 export function transformString(input: string, rules: TransformRule[], options: TransformOptions = {}): string {
   const { returnOriginalOnNoMatch = true, onMatch, maps, context, collectMap, onRuleEvaluated } = options;
-
+  console.log("Am I even here?");
   let output = input;
   let matchedAtLeastOne = false;
   const outputsMap: Record<string, string> = {};
 
   for (const rule of rules) {
+    // Special handling for Array rules (inputFieldPath contains "[*]")
+    const isArrayRule = typeof rule.inputFieldPath === "string" && rule.inputFieldPath.includes("[*]");
+    if (isArrayRule) {
+      console.log("Is Array Rule!");
+      // Split the path into array holder path and optional sub-path for each item
+      const m = /^(.*?)(?:\[\*\])(?:\.(.*))?$/.exec(rule.inputFieldPath as string);
+      const arrayPath = m && m[1] ? m[1].replace(/\.$/, "") : "";
+      const perItemSubPath = m && m[2] ? m[2] : "";
+
+      const arr = getValueAtPath(context, arrayPath);
+      const sourceArr = Array.isArray(arr) ? arr : [];
+
+      const start = Math.max(0, Math.min(sourceArr.length, Number(rule.startIndex ?? 0)));
+      const end = Math.max(
+        0,
+        Math.min(sourceArr.length - 1, rule.endIndex != null ? Number(rule.endIndex) : sourceArr.length - 1)
+      );
+
+      const sliced = start <= end ? sourceArr.slice(start, end + 1) : [];
+
+      // Resolve string values from each item
+      const values: string[] = [];
+      for (const item of sliced) {
+        let v: any = item;
+        if (perItemSubPath) {
+          v = getValueAtPath(item, perItemSubPath);
+          console.log("Value: ", v);
+          if (v === undefined || v === null) continue;
+          values.push(String(v));
+        } else {
+          if (typeof v === "string") {
+            values.push(v);
+          } else {
+            // If no additional path, ensure it's an array of strings – skip non-strings
+            continue;
+          }
+        }
+      }
+
+      if (values.length === 0) {
+        // No items to process, treat as no-match
+        if (rule.id) outputsMap[rule.id] = output;
+        if (typeof onRuleEvaluated === "function") {
+          try {
+            onRuleEvaluated({
+              rule,
+              input: "",
+              pattern: rule.pattern,
+              replacement: rule.replacement,
+              matched: false,
+            });
+          } catch {
+            console.error("Error occurred while evaluating rule:", rule);
+          }
+        }
+        continue;
+      }
+
+      // Resolve pattern/replacement with map token expansion
+      const patternResolvedRaw = expandMapTemplate(rule.pattern || "", outputsMap);
+      const patternResolved = patternResolvedRaw.trim();
+      const replacementResolvedPre = expandMapTemplate(rule.replacement ?? "", outputsMap);
+
+      let re: RegExp;
+      try {
+        re = new RegExp(patternResolved, rule.flags ?? "");
+      } catch (e) {
+        // Invalid regex -> treat as no-match for safety
+        if (rule.id) outputsMap[rule.id] = output;
+        if (typeof onRuleEvaluated === "function") {
+          try {
+            onRuleEvaluated({
+              rule,
+              input: values.join(","),
+              pattern: patternResolved,
+              replacement: replacementResolvedPre,
+              matched: false,
+            });
+          } catch {
+            console.error("Error occurred while evaluating rule:", rule);
+          }
+        }
+        continue;
+      }
+
+      const anyMatched = values.some((v) => re!.test(v));
+      if (typeof onRuleEvaluated === "function") {
+        try {
+          onRuleEvaluated({
+            rule,
+            input: values.join(","),
+            pattern: patternResolved,
+            replacement: replacementResolvedPre,
+            matched: anyMatched,
+          });
+        } catch {
+          console.error("Error occurred while evaluating rule:", rule);
+        }
+      }
+
+      const transformed = values.map((val) => {
+        if (hasTemplateSyntax(rule.replacement)) {
+          return val.replace(re as RegExp, (...args: any[]) => {
+            const match = args[0] as string;
+            const maybeGroups = args[args.length - 1];
+            const hasNamed = typeof maybeGroups === "object" && maybeGroups !== null;
+            const capList = args.slice(1, args.length - (hasNamed ? 3 : 2));
+            const caps = {
+              byIndex: [match, ...capList],
+              byName: (hasNamed ? maybeGroups : {}) as Record<string, string | undefined>,
+            };
+            return renderTemplate(replacementResolvedPre, caps, maps);
+          });
+        }
+        return val.replace(re as RegExp, replacementResolvedPre);
+      });
+
+      const joinWith = rule.joinWith ?? "";
+      const nextOut = transformed.join(joinWith);
+
+      if (onMatch) onMatch(rule, values.join(joinWith), nextOut);
+      output = nextOut;
+      if (rule.id) outputsMap[rule.id] = output;
+      if (anyMatched) matchedAtLeastOne = true;
+      if (rule.stopOnMatch === true) break;
+      continue; // proceed to next rule
+    }
     // Determine the input for this rule
     let ruleInput: string = output;
     if (typeof (rule as any).input === "string") {
