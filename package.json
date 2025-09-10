@@ -10,7 +10,7 @@
   ],
   "dependencies": {
     "@codemirror/lang-json": "^6.0.2",
-    "@contentstack/app-sdk": "^2.2.0",
+    "@contentstack/app-sdk": "^2.3.2",
     "@contentstack/venus-components": "^2.2.5",
     "@types/jest": "^29.5.11",
     "@types/node": "^18.19.4",

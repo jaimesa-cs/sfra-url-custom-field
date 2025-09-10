@@ -21,6 +21,7 @@ const CustomUrlFieldExtension = () => {
 
   const updateFieldValue = useCallback(
     (url: string, auto: boolean) => {
+      console.log("Updating field value:", { url, auto });
       if (appSdk?.location?.CustomField) {
         appSdk.location.CustomField.field
           .setData({
@@ -29,6 +30,7 @@ const CustomUrlFieldExtension = () => {
           })
           .then(() => {
             //TODO: IMPLEMENT TOAST
+            console.log("Field value updated successfully");
           })
           .catch((e) => {
             console.error("Error updating field value:", e);
@@ -40,7 +42,13 @@ const CustomUrlFieldExtension = () => {
 
   React.useEffect(() => {
     if (!appSdk?.location?.CustomField || !appConfig?.app_configuration) return;
-
+    console.log("Initial autoUrl value: ", appSdk?.location?.CustomField.field.getData()?.autoUrl);
+    if (Object.keys(appSdk?.location?.CustomField?.entry.getData()).length === 0) {
+      setIsEnabled(false);
+      setWarningMessage("No entry data available. Please save the entry first.");
+      setIsLoading(false);
+      return;
+    }
     const customField = appSdk.location.CustomField;
     const fieldData = customField.field.getData();
     if (customField.frame) {
@@ -82,6 +90,7 @@ const CustomUrlFieldExtension = () => {
     // Evaluate initial state for enable/warning using current entry data
     const initData = customField.entry.getData() || {};
     const initRules: any[] = resolveRules(appConfig?.app_configuration, initData);
+
     if (initRules.length > 0) {
       setIsEnabled(true);
       setWarningMessage(null);
@@ -92,8 +101,12 @@ const CustomUrlFieldExtension = () => {
       return;
     }
 
-    customField.entry.onChange(async (newData) => {
-      if (!newData) return;
+    customField.entry.onChange(async () => {
+      const newData = await customField?.entry.getDraftData();
+      console.log("Entry data changed:", newData);
+      if (!newData) {
+        return;
+      }
       const autoUrlEnabled = newData?.custom_url?.autoUrl;
       if (!autoUrlEnabled) {
         console.log("Auto URL generation is disabled.");
@@ -124,7 +137,7 @@ const CustomUrlFieldExtension = () => {
         newSlug = transformString(String(inputValue), rules, { context: newData });
         if (newSlug !== undefined) {
           setSlug(newSlug);
-          customField.entry.getField("url").setData(newSlug);
+          customField?.entry.getField("url")?.setData(newSlug);
         }
       }
       setIsLoading(false);

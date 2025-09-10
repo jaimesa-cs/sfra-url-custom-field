@@ -216,7 +216,7 @@ function expandMapTemplate(template: string, outputs: Record<string, string>): s
 
 export function transformString(input: string, rules: TransformRule[], options: TransformOptions = {}): string {
   const { returnOriginalOnNoMatch = true, onMatch, maps, context, collectMap, onRuleEvaluated } = options;
-  console.log("Am I even here?");
+
   let output = input;
   let matchedAtLeastOne = false;
   const outputsMap: Record<string, string> = {};
